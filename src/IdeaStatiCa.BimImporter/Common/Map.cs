@@ -32,6 +32,16 @@ namespace IdeaStatiCa.BimImporter.Common
 			return _lefts[left];
 		}
 
+		public IEnumerable<TRight> GetRights()
+		{
+			return _rights.Keys;
+		}
+
+		public IEnumerable<TLeft> GetLefts()
+		{
+			return _lefts.Keys;
+		}
+
 		public bool TryGetLeft(TRight right, out TLeft left)
 		{
 			if (_rights.TryGetValue(right, out TLeft result))
