@@ -2,7 +2,6 @@
 using IdeaStatiCa.Plugin.Utilities;
 using System;
 using System.Diagnostics;
-using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -193,7 +192,7 @@ namespace IdeaStatiCa.Plugin
 
 					ideaLogger.LogDebug($"Cannot start '{exePath}', throwing exception.");
 
-					throw new CommunicationException($"Cannot start '{exePath}'.");
+					throw new Exception($"Cannot start '{exePath}'.");
 				}
 				syncEvent.Close();
 			}

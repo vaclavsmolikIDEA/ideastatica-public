@@ -1,4 +1,5 @@
-﻿using IdeaRS.OpenModel.Connection;
+﻿#if !NETSTANDARD
+using IdeaRS.OpenModel.Connection;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -151,3 +152,4 @@ namespace IdeaStatiCa.Plugin
 		protected IConnHiddenCheck Service => base.Channel;
 	}
 }
+#endif

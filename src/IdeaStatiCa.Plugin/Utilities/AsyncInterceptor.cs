@@ -41,17 +41,17 @@ namespace IdeaStatiCa.Plugin.Utilities
 			{
 				var task2 = (Task)invocation.Method.Invoke(invocation.InvocationTarget, invocation.Arguments);
 				var tcs2 = new TaskCompletionSource<Object>();
-				task2.ContinueWith(x =>
-				{
-					if (x.IsFaulted)
-					{
-						tcs2.SetException(x.Exception);
-						return;
-					}
-					dynamic dynamicTask = task2;
-					Object result = dynamicTask.Result;
-					tcs2.SetResult(result);
-				});
+				_ = task2.ContinueWith(x =>
+				  {
+					  if (x.IsFaulted)
+					  {
+						  tcs2.SetException(x.Exception);
+						  return;
+					  }
+					  dynamic dynamicTask = task2;
+					  object result = dynamicTask.Result;
+					  tcs2.SetResult(result);
+				  });
 				return tcs2.Task;
 			});
 

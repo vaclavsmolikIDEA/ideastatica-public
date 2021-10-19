@@ -18,8 +18,6 @@ namespace IdeaStatiCa.Plugin
 
 		protected EventWaitHandle CurrentItemChangedEvent;
 
-		protected IdeaStatiCaClient<IAutomation> ConnectionAppClient { get; set; }
-
 		protected AutomationHostingGrpc<IAutomation, IAutomation> GrpcClient { get; set; }
 
 		protected virtual uint UserMode { get; } = 0;
@@ -123,10 +121,9 @@ namespace IdeaStatiCa.Plugin
 			IdeaStatiCaProcess.Dispose();
 			IdeaStatiCaProcess = null;
 			CalculatorUrl = null;
-			ConnectionAppClient = null;
 		}
 
-		#region IDisposable Support
+#region IDisposable Support
 		private bool disposedValue = false; // To detect redundant calls
 
 		protected virtual void Dispose(bool disposing)
@@ -160,6 +157,6 @@ namespace IdeaStatiCa.Plugin
 			// TODO: uncomment the following line if the finalizer is overridden above.
 			// GC.SuppressFinalize(this);
 		}
-		#endregion
+#endregion
 	}
 }

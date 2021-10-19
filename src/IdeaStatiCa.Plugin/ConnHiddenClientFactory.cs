@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.ServiceModel;
@@ -100,7 +101,7 @@ namespace IdeaStatiCa.Plugin
 			CalculatorUrl = null;
 		}
 
-		#region IDisposable Support
+#region IDisposable Support
 
 		private bool disposedValue = false; // To detect redundant calls
 
@@ -149,6 +150,7 @@ namespace IdeaStatiCa.Plugin
 			// GC.SuppressFinalize(this);
 		}
 
-		#endregion IDisposable Support
+#endregion IDisposable Support
 	}
 }
+#endif

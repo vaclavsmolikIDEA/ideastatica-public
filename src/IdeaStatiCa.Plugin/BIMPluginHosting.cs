@@ -1,4 +1,5 @@
-﻿using IdeaStatiCa.Plugin.Grpc;
+﻿#if !NETSTANDARD
+using IdeaStatiCa.Plugin.Grpc;
 using System;
 using System.Diagnostics;
 using System.ServiceModel;
@@ -8,24 +9,6 @@ using System.Threading.Tasks;
 
 namespace IdeaStatiCa.Plugin
 {
-	public interface IBIMPluginHosting
-	{
-		Task RunAsync(string id, string workingDirectory);
-
-		event ISEventHandler AppStatusChanged;
-
-		IApplicationBIM Service { get; }
-	}
-
-	public interface IBIMPluginFactory
-	{
-		IApplicationBIM Create();
-
-		string FeaAppName { get; }
-
-		string IdeaStaticaAppPath { get; }
-	}
-
 	public class BIMPluginHosting : IBIMPluginHosting, IDisposable
 	{
 		private Task hostingTask;
@@ -240,7 +223,7 @@ namespace IdeaStatiCa.Plugin
 			ideaLogger.LogTrace($"NotifyAppStatusChanged service '{ServiceBaseAddress}' newStatus = '{newStatus}' - handling of the event finished.");
 		}
 
-		#region IDisposable Support
+#region IDisposable Support
 
 		private bool disposedValue = false; // To detect redundant calls
 
@@ -322,6 +305,7 @@ namespace IdeaStatiCa.Plugin
 			// GC.SuppressFinalize(this);
 		}
 
-		#endregion IDisposable Support
+#endregion IDisposable Support
 	}
 }
+#endif

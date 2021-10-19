@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD
+using System;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -7,43 +8,6 @@ using System.Threading.Tasks;
 
 namespace IdeaStatiCa.Plugin
 {
-	/// <summary>
-	/// Responsible for controlling the connected BIM application to IS
-	/// </summary>
-	/// <typeparam name="T">Type of the plugin's service contract</typeparam>
-	public interface IBIMPluginClient<T>
-	{
-		/// <summary>
-		/// Used for calling methods of connected BIM application
-		/// </summary>
-		T MyBIM { get; }
-
-		/// <summary>
-		/// Notification about events in the connected BIM application
-		/// </summary>
-		event ISEventHandler BIMStatusChanged;
-
-		/// <summary>
-		/// Starts BIM application
-		/// </summary>
-		/// <param name="id">Identified of </param>
-		/// <returns></returns>
-		Task RunAsync(string id);
-
-		/// <summary>
-		/// Stops BIM application
-		/// </summary>
-		void Stop();
-
-		/// <summary>
-		/// Get status of the BIM application
-		/// </summary>
-		AutomationStatus Status
-		{
-			get;
-		}
-	}
-
 	/// <summary>
 	/// Responsible of hosting an automation service on net.pipe endpoint
 	/// </summary>
@@ -379,7 +343,7 @@ namespace IdeaStatiCa.Plugin
 			Stop();
 		}
 
-		#region IDisposable Support
+#region IDisposable Support
 
 		private bool disposedValue = false; // To detect redundant calls
 
@@ -457,6 +421,7 @@ namespace IdeaStatiCa.Plugin
 			// GC.SuppressFinalize(this);
 		}
 
-		#endregion IDisposable Support
+#endregion IDisposable Support
 	}
 }
+#endif

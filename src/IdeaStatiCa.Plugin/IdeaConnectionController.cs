@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.ServiceModel;
@@ -145,3 +146,4 @@ namespace IdeaStatiCa.Plugin
 		#endregion
 	}
 }
+#endif

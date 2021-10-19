@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿#if !NETSTANDARD
+using System.Threading;
 
 namespace IdeaStatiCa.Plugin
 {
@@ -49,3 +50,4 @@ namespace IdeaStatiCa.Plugin
 		protected IMemberHiddenCheck Service => base.Channel;
 	}
 }
+#endif
