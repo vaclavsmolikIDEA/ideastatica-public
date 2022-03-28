@@ -233,7 +233,7 @@ namespace ConnectionHiddenCalculation
 				return Service;
 			}
 
-			IdeaConnectionClient = CalcFactory.Create();
+			IdeaConnectionClient = (ConnectionHiddenCheckClient)CalcFactory.Create();
 			Service = IdeaConnectionClient;
 			return Service;
 		}

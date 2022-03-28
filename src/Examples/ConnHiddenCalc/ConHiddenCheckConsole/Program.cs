@@ -46,7 +46,7 @@ namespace ConnCalculatorConsole
 			ConnHiddenClientFactory calcFactory = new ConnHiddenClientFactory(ideaStaticaInstallDir);
 
 			//create the instance of the IDEA StatiCa Client
-			ConnectionHiddenCheckClient client = calcFactory.Create();
+			ConnectionHiddenCheckClient client = (ConnectionHiddenCheckClient)calcFactory.Create();
 			try
 			{
 				// open project on the service side

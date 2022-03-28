@@ -6,11 +6,6 @@ using System.Threading;
 
 namespace IdeaStatiCa.Plugin
 {
-	public interface IConnCalculatorFactory
-	{
-		ConnectionHiddenCheckClient Create();
-	}
-
 	public class ConnHiddenClientFactory : IDisposable, IConnCalculatorFactory
 	{
 		private readonly string IdeaInstallDir;
@@ -28,7 +23,7 @@ namespace IdeaStatiCa.Plugin
 			IdeaInstallDir = ideaInstallDir;
 		}
 
-		public ConnectionHiddenCheckClient Create()
+		public IConnHiddenCheck Create()
 		{
 			RunCalculatorProcess();
 

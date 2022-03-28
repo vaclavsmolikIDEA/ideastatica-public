@@ -68,7 +68,7 @@ namespace IOM.SteelFrameDesktop
 
 			var calcFactory = new ConnHiddenClientFactory(IdeaInstallDir);
 
-			var client = calcFactory.Create();
+			var client = (ConnectionHiddenCheckClient)calcFactory.Create();
 			try
 			{
 				// it creates connection project from IOM 
