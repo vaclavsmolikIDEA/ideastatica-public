@@ -32,8 +32,8 @@ namespace ConnectionHiddenCalculation
 		string ideaStatiCaDir;
 		ObservableCollection<ConnectionVM> connections;
 		string results;
-		ConnHiddenClientFactory CalcFactory { get; set; }
-		ConnectionHiddenCheckClient IdeaConnectionClient { get; set; }
+		IConnCalculatorFactory CalcFactory { get; set; }
+
 		IConnHiddenCheck service;
 		string newBoltAssemblyName;
 		string templateSettingString;
@@ -73,7 +73,7 @@ namespace ConnectionHiddenCalculation
 				{
 					IsIdea = true;
 					StatusMessage = string.Format("IdeaStatiCa installation was found in '{0}'", ideaStatiCaDir);
-					CalcFactory = new ConnHiddenClientFactory(ideaStatiCaDir);
+					CalcFactory = new ConnHiddenClientGrpcFactory(ideaStatiCaDir, Logger);
 				}
 			}
 
@@ -233,8 +233,7 @@ namespace ConnectionHiddenCalculation
 				return Service;
 			}
 
-			IdeaConnectionClient = (ConnectionHiddenCheckClient)CalcFactory.Create();
-			Service = IdeaConnectionClient;
+			Service = CalcFactory.Create();
 			return Service;
 		}
 
@@ -245,9 +244,7 @@ namespace ConnectionHiddenCalculation
 				return;
 			}
 
-			IdeaConnectionClient.CloseProject();
-			IdeaConnectionClient.Close();
-			IdeaConnectionClient = null;
+			Service.CloseProject();
 			Service = null;
 
 			Results = string.Empty;

@@ -1,4 +1,6 @@
-﻿using IdeaStatiCa.Plugin.Utilities;
+﻿using IdeaStatiCa.Plugin.Grpc;
+using IdeaStatiCa.Plugin.Grpc.Reflection;
+using IdeaStatiCa.Plugin.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -35,19 +37,19 @@ namespace IdeaStatiCa.Plugin
 		/// <inheritdoc cref="IConnCalculatorFactory.Create"/>
 		public IConnHiddenCheck Create()
 		{
-
-			return null;
+			return RunCalculatorProcess();
 		}
 
 
-		private void RunCalculatorProcess()
+		private IConnHiddenCheck RunCalculatorProcess()
 		{
 			if (CalculatorProcess != null)
 			{
-				return;
+				throw new InvalidOperationException();
 			}
 
 			int myProcessId = Process.GetCurrentProcess().Id;
+			int grpcPort = PortFinder.FindPort();
 
 			string eventName = string.Format(Constants.ConCalculatorChangedEventFormat, myProcessId);
 			using (EventWaitHandle syncEvent = new EventWaitHandle(false, EventResetMode.AutoReset, eventName))
@@ -59,8 +61,6 @@ namespace IdeaStatiCa.Plugin
 				{
 					throw new ArgumentException($"RunCalculatorProcess - file '{applicationExePath}' doesn't exists");
 				}
-
-				int grpcPort = PortFinder.FindPort();
 
 				string cmdParams = $"-automation{myProcessId} {Constants.GrpcPortParam}:{grpcPort}";
 				ProcessStartInfo psi = new ProcessStartInfo(applicationExePath, cmdParams);
@@ -84,9 +84,19 @@ namespace IdeaStatiCa.Plugin
 				}
 			}
 
-			//ConnectionHiddenCheckClient.HiddenCalculatorId = CalculatorProcess.Id;
-			//CalculatorUrl = new Uri(string.Format(Constants.ConnHiddenCalculatorUrlFormat, CalculatorProcess.Id));
+			GrpcClient grpcClient = new GrpcClient(PluginLogger);
+			grpcClient.Connect(myProcessId.ToString(), grpcPort);
+
+
+			var grpcReflectionHandler = new GrpcMethodInvokerHandler(IdeaStatiCa.Plugin.Constants.GRPC_CONNHIDDENCALC_HANDLER_MESSAGE, grpcClient, PluginLogger);
+
+			IConnHiddenCheck connHiddenCheck = GrpcReflectionServiceFactory.CreateInstance<IConnHiddenCheck>(grpcReflectionHandler);
+
+			grpcClient.RegisterHandler(IdeaStatiCa.Plugin.Constants.GRPC_CONNHIDDENCALC_HANDLER_MESSAGE, grpcReflectionHandler);
+
 			CalculatorProcess.Exited += CalculatorProcess_Exited;
+
+			return connHiddenCheck;
 		}
 
 		private void CalculatorProcess_Exited(object sender, EventArgs e)
