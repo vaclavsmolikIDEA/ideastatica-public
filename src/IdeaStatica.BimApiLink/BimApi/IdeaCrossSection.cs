@@ -23,6 +23,7 @@ namespace IdeaStatica.BimApiLink.BimApi
 		{
 		}
 	}
+
 	public abstract class IdeaCrossSectionByCenterLine : IdeaObjectBase<IIdeaCrossSectionByCenterLine>, IIdeaCrossSectionByCenterLine
 	{
 		public virtual IIdeaMaterial Material { get; set; } = null!;

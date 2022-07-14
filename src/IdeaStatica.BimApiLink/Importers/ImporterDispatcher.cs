@@ -5,7 +5,7 @@ namespace IdeaStatica.BimApiLink.Importers
 {
 	internal class ImporterDispatcher
 	{
-		private Dictionary<Type, object> _importers = new();
+		private readonly Dictionary<Type, object> _importers = new();
 
 		public void AddImporter<T>(IImporter<T> importer)
 			where T : IIdeaObject
@@ -13,15 +13,14 @@ namespace IdeaStatica.BimApiLink.Importers
 			_importers.Add(typeof(T), importer);
 		}
 
-		public IIdeaObject Get(IIdentifier<IIdeaObject> identifier)
-		{
-			throw new NotImplementedException();
-		}
-
-		public T Get<T>(IIdentifier<T> importer)
+		public T Get<T>(IIdentifier<T> identifier)
 			where T : IIdeaObject
 		{
-			throw new NotImplementedException();
+			if (_importers.TryGetValue(typeof(T), out object? obj))
+			{
+				IImporter<T> importer = (IImporter<T>)obj;
+				return importer.Get(identifier);
+			}
 		}
 	}
 }
