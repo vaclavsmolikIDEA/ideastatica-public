@@ -1,31 +1,26 @@
-﻿using IdeaStatica.BimApiLink.Identifiers;
+using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatiCa.BimApi;
 
 namespace IdeaStatica.BimApiLink.BimApi
 {
-	public class IdeaNode : IdeaObjectBase<IIdeaNode>, IIdeaNode
+	public class IdeaNode : AbstractIdeaObject<IIdeaNode>, IIdeaNode
 	{
-		public virtual IdeaVector3D Vector { get; set; } = null!;
-
 		public virtual IIdeaPersistenceToken Token { get; set; }
-
-		protected IdeaNode(IIdentifier<IIdeaNode> identifer)
+		
+		public virtual IdeaVector3D Vector { get; set; } = null!;
+		
+		protected IdeaNode(Identifier<IIdeaNode> identifer)
 			: base(identifer)
 		{
 			Token = identifer;
 		}
 
-		public sealed class Ref : IdeaNode
-		{
-			public override string Name => Identifier.Instance().Name;
+		public IdeaNode(int id)
+			: this(new IntIdentifier<IIdeaNode>(id))
+		{ }
 
-			public override IIdeaPersistenceToken Token => Identifier.Instance().Token;
-
-			public override IdeaVector3D Vector => Identifier.Instance().Vector;
-
-			public Ref(IIdentifier<IIdeaNode> identifer) : base(identifer)
-			{
-			}
-		}
+		public IdeaNode(string id)
+			: this(new StringIdentifier<IIdeaNode>(id))
+		{ }
 	}
 }

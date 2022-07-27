@@ -1,36 +1,36 @@
 ﻿using IdeaStatiCa.BimApi;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IdeaStatica.BimApiLink.Importers
 {
 	internal class ImporterManager
 	{
-		private readonly Dictionary<Type, object> _importers = new();
+		private readonly Dictionary<Type, IImporter> _importers = new();
 		private readonly List<IImporterProvider> _providers = new();
 
-		public void Register<T>(IImporter<T> importer)
-			where T : IIdeaObject
-		{
-			_importers.Add(typeof(T), importer);
-		}
+		public void RegisterImporter<T>(IImporter<T> importer)
+			where T : IIdeaObject => _importers.Add(typeof(T), importer);
 
-		public void RegisterProvider(IImporterProvider provider)
-		{
-			_providers.Add(provider);
-		}
+		public void RegisterProvider(IImporterProvider provider) => _providers.Add(provider);
 
-		public bool IsRegistered<T>()
-			where T : IIdeaObject
+		public bool TryResolve(Type type, [NotNullWhen(true)] out IImporter? importer)
 		{
-			if (_importers.ContainsKey(typeof(T)))
+			if (_importers.TryGetValue(type, out IImporter? importer1))
 			{
+				importer = importer1;
 				return true;
 			}
 
-			if (_providers.Any(x => x.CanProvide<T>()))
+			foreach (IImporterProvider provider in _providers)
 			{
-				return true;
+				importer = provider.GetProvider(type);
+				if (importer is not null)
+				{
+					return true;
+				}
 			}
 
+			importer = null;
 			return false;
 		}
 	}

@@ -1,20 +1,24 @@
 ﻿using IdeaRS.OpenModel;
 using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatica.BimApiLink.Persistence;
-using IdeaStatica.BimApiLink.Scope;
+using IdeaStatica.BimApiLink.Scoping;
 using IdeaStatiCa.BimApi;
 using IdeaStatiCa.BimImporter;
 using IdeaStatiCa.Plugin;
 
 namespace IdeaStatica.BimApiLink
 {
-	public abstract class ProjectApplication : ApplicationBIM
+	public abstract class AbstractApplication : ApplicationBIM
 	{
 		private readonly IProject _project;
 		private readonly IProjectStorage _projectStorage;
 
-		protected ProjectApplication(IProject project, IProjectStorage projectStorage)
+		protected override string ApplicationName { get; }
+
+		protected AbstractApplication(string applicationName, IProject project, IProjectStorage projectStorage)
 		{
+			ApplicationName = applicationName;
+
 			_project = project;
 			_projectStorage = projectStorage;
 
@@ -23,18 +27,18 @@ namespace IdeaStatica.BimApiLink
 
 		public override void ActivateInBIM(List<BIMItemId> items)
 		{
-			using (new Scope.Scope())
+			using (new BimLinkScope())
 			{
 				List<IIdeaPersistenceToken> tokens = items
 					.Where(x => x.Type != BIMItemType.BIMItemsGroup)
 					.Select(x => _project.GetPersistenceToken(x.Id))
 					.ToList();
 
-				IEnumerable<IIdentifier<IIdeaNode>> nodes = tokens
-					.OfType<IIdentifier<IIdeaNode>>();
+				IEnumerable<Identifier<IIdeaNode>> nodes = tokens
+					.OfType<Identifier<IIdeaNode>>();
 
-				IEnumerable<IIdentifier<IIdeaMember1D>> members = tokens
-					.OfType<IIdentifier<IIdeaMember1D>>();
+				IEnumerable<Identifier<IIdeaMember1D>> members = tokens
+					.OfType<Identifier<IIdeaMember1D>>();
 
 				Select(nodes, members);
 			}
@@ -42,7 +46,7 @@ namespace IdeaStatica.BimApiLink
 
 		protected override ModelBIM ImportActive(CountryCode countryCode, RequestedItemsType requestedType)
 		{
-			using (new Scope.Scope())
+			using (new BimLinkScope())
 			{
 				try
 				{
@@ -57,7 +61,7 @@ namespace IdeaStatica.BimApiLink
 
 		protected override List<ModelBIM> ImportSelection(CountryCode countryCode, List<BIMItemsGroup> items)
 		{
-			using (new Scope.Scope())
+			using (new BimLinkScope())
 			{
 				try
 				{
@@ -70,7 +74,7 @@ namespace IdeaStatica.BimApiLink
 			}
 		}
 
-		protected abstract void Select(IEnumerable<IIdentifier<IIdeaNode>> nodes, IEnumerable<IIdentifier<IIdeaMember1D>> members);
+		protected abstract void Select(IEnumerable<Identifier<IIdeaNode>> nodes, IEnumerable<Identifier<IIdeaMember1D>> members);
 
 		protected abstract ModelBIM ImportSelection(CountryCode countryCode, RequestedItemsType requestedType);
 

@@ -3,11 +3,17 @@ using IdeaStatiCa.BimApi;
 
 namespace IdeaStatica.BimApiLink.Importers
 {
-	public interface IImporter { }
+	public interface IImporter
+	{
+		T Create<T>(Identifier<T> identifier)
+			where T : IIdeaObject;
 
-	public interface IImporter<T>: IImporter
+		IIdeaObject Create(IIdentifier identifier);
+	}
+
+	public interface IImporter<T> : IImporter
 		where T : IIdeaObject
 	{
-		T Get(IIdentifier<T> identifier);
+		T Create(Identifier<T> identifier);
 	}
 }

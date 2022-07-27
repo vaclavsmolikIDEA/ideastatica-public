@@ -3,16 +3,16 @@ using IdeaStatiCa.BimApi;
 
 namespace IdeaStatica.BimApiLink.BimApi
 {
-	public abstract class IdeaObjectBase<T> : IIdeaObject
+	public abstract class AbstractIdeaObject<T> : BimLinkObject, IIdeaObject
 		where T : IIdeaObject
 	{
 		public string Id => Identifier.GetStringId();
 
 		public virtual string Name { get; set; } = string.Empty;
 
-		public IIdentifier<T> Identifier { get; }
+		public Identifier<T> Identifier { get; }
 
-		protected IdeaObjectBase(IIdentifier<T> identifier)
+		protected AbstractIdeaObject(Identifier<T> identifier)
 		{
 			Identifier = identifier;
 		}

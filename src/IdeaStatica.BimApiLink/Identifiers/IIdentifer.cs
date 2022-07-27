@@ -3,11 +3,15 @@
 namespace IdeaStatica.BimApiLink.Identifiers
 {
 	public interface IIdentifier : IIdeaPersistenceToken
-	{ }
+	{
+		public Type ObjectType { get; }
+	}
 
-	public interface IIdentifier<T> : IIdentifier
+	public abstract class Identifier<T> : IIdentifier
 		where T : IIdeaObject
 	{
-		string GetStringId();
+		public Type ObjectType => typeof(T);
+
+		public abstract string GetStringId();
 	}
 }
