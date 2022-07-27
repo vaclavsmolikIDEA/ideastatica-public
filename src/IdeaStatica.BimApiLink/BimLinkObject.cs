@@ -1,4 +1,5 @@
-﻿using IdeaStatica.BimApiLink.Identifiers;
+﻿using IdeaRS.OpenModel;
+using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatica.BimApiLink.Importers;
 using IdeaStatica.BimApiLink.Scoping;
 using IdeaStatiCa.BimApi;
@@ -9,7 +10,7 @@ namespace IdeaStatica.BimApiLink
 	{
 		protected T2 Get<T2>(Identifier<T2> identifier)
 			where T2 : IIdeaObject
-			=> Dispatcher.Get(identifier);
+			=> BimApiImporter.Get(identifier);
 
 		protected T2 Get<T2>(int id)
 			where T2 : IIdeaObject
@@ -19,7 +20,10 @@ namespace IdeaStatica.BimApiLink
 			where T2 : IIdeaObject
 			=> Get(new StringIdentifier<T2>(id));
 
-		internal ImporterDispatcher Dispatcher
-			=> Scope.Get<ImporterDispatcher>("importerDispatcher");
+		protected CountryCode CountryCode
+			=> Scope.CountryCode;
+
+		internal IBimApiImporter BimApiImporter
+			=> Scope.BimApiImporter;
 	}
 }

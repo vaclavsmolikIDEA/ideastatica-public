@@ -2,7 +2,7 @@
 
 namespace IdeaStatica.BimApiLink.Identifiers
 {
-	public class IntIdentifier<T> : Identifier<T>
+	public record IntIdentifier<T> : Identifier<T>
 		where T : IIdeaObject
 	{
 		public int Id { get; }

@@ -1,5 +1,6 @@
 ﻿using IdeaRS.OpenModel;
 using IdeaStatica.BimApiLink.Identifiers;
+using IdeaStatica.BimApiLink.Importers;
 using IdeaStatica.BimApiLink.Persistence;
 using IdeaStatica.BimApiLink.Scoping;
 using IdeaStatiCa.BimApi;
@@ -8,26 +9,31 @@ using IdeaStatiCa.Plugin;
 
 namespace IdeaStatica.BimApiLink
 {
-	public abstract class AbstractApplication : ApplicationBIM
+	public abstract class BimApiApplication : ApplicationBIM
 	{
 		private readonly IProject _project;
 		private readonly IProjectStorage _projectStorage;
+		private readonly IBimApiImporter _bimApiImporter;
 
 		protected override string ApplicationName { get; }
 
-		protected AbstractApplication(string applicationName, IProject project, IProjectStorage projectStorage)
+		protected BimApiApplication(
+			string applicationName,
+			IProject project,
+			IProjectStorage projectStorage,
+			IBimApiImporter bimApiImporter)
 		{
 			ApplicationName = applicationName;
 
 			_project = project;
 			_projectStorage = projectStorage;
-
+			_bimApiImporter = bimApiImporter;
 			projectStorage.Load();
 		}
 
 		public override void ActivateInBIM(List<BIMItemId> items)
 		{
-			using (new BimLinkScope())
+			using (CreateScope(CountryCode.None))
 			{
 				List<IIdeaPersistenceToken> tokens = items
 					.Where(x => x.Type != BIMItemType.BIMItemsGroup)
@@ -46,7 +52,7 @@ namespace IdeaStatica.BimApiLink
 
 		protected override ModelBIM ImportActive(CountryCode countryCode, RequestedItemsType requestedType)
 		{
-			using (new BimLinkScope())
+			using (CreateScope(countryCode))
 			{
 				try
 				{
@@ -61,7 +67,7 @@ namespace IdeaStatica.BimApiLink
 
 		protected override List<ModelBIM> ImportSelection(CountryCode countryCode, List<BIMItemsGroup> items)
 		{
-			using (new BimLinkScope())
+			using (CreateScope(countryCode))
 			{
 				try
 				{
@@ -82,5 +88,10 @@ namespace IdeaStatica.BimApiLink
 
 		private void ImportFinished()
 			=> _projectStorage.Save();
+
+		private BimLinkScope CreateScope(CountryCode countryCode)
+		{
+			return new BimLinkScope(new BimApiImporterCacheAdapter(_bimApiImporter), countryCode);
+		}
 	}
 }

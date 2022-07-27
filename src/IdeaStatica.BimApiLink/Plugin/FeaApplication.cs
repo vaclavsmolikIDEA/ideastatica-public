@@ -1,5 +1,6 @@
 ﻿using IdeaRS.OpenModel;
 using IdeaStatica.BimApiLink.Identifiers;
+using IdeaStatica.BimApiLink.Importers;
 using IdeaStatica.BimApiLink.Persistence;
 using IdeaStatiCa.BimApi;
 using IdeaStatiCa.BimImporter;
@@ -7,7 +8,7 @@ using IdeaStatiCa.Plugin;
 
 namespace IdeaStatica.BimApiLink.Plugin
 {
-	public class FeaApplication : AbstractApplication
+	public class FeaApplication : BimApiApplication
 	{
 		private readonly IBimImporter _bimImporter;
 
@@ -15,8 +16,9 @@ namespace IdeaStatica.BimApiLink.Plugin
 			string applicationName,
 			IProject project,
 			IProjectStorage projectStorage,
-			IBimImporter bimImporter)
-			: base(applicationName, project, projectStorage)
+			IBimImporter bimImporter,
+			IBimApiImporter bimApiImporter)
+			: base(applicationName, project, projectStorage, bimApiImporter)
 		{
 			_bimImporter = bimImporter;
 		}

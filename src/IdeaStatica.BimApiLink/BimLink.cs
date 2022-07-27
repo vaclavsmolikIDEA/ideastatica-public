@@ -88,7 +88,7 @@ namespace IdeaStatica.BimApiLink
 			FeaModelAdapter feaModelAdapter = new (bimApiImporter, _feaModel);
 			IBimImporter bimImporter = BimImporter.Create(feaModelAdapter, projectAdapter, logger);
 
-			return new FeaApplication(ApplicationName, projectAdapter, projectStorage, bimImporter);
+			return new FeaApplication(ApplicationName, projectAdapter, projectStorage, bimImporter, bimApiImporter);
 		}
 	}
 }

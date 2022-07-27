@@ -1,12 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using IdeaRS.OpenModel;
 
 namespace IdeaStatica.BimApiLink
 {
 	public interface IBimImportContext
 	{
+		CountryCode CountryCode { get; }
+	}
+
+	public class BimImportContext : IBimImportContext
+	{
+		public CountryCode CountryCode { get; }
+
+		public BimImportContext(CountryCode countryCode)
+		{
+			CountryCode = countryCode;
+		}
 	}
 }

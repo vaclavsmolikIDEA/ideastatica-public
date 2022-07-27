@@ -1,9 +1,12 @@
-﻿namespace IdeaStatica.BimApiLink.Scoping
+﻿using IdeaRS.OpenModel;
+using IdeaStatica.BimApiLink.Importers;
+
+namespace IdeaStatica.BimApiLink.Scoping
 {
 	public interface IScope
 	{
-		T Get<T>(string key);
+		IBimApiImporter BimApiImporter { get; }
 
-		void Set<T>(string key, T value);
+		CountryCode CountryCode { get; }
 	}
 }
