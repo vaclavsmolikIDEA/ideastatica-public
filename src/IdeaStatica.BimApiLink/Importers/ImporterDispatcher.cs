@@ -11,6 +11,10 @@ namespace IdeaStatica.BimApiLink.Importers
 		public ImporterDispatcher(ImporterManager importerManager)
 		{
 			_importerManager = importerManager;
+			
+			_interfaceRank[typeof(IIdeaObject)] = 0;
+			_interfaceRank[typeof(IIdeaPersistentObject)] = 0;
+			_interfaceRank[typeof(IIdeaObjectWithResults)] = 0;
 		}
 
 		public T Get<T>(Identifier<T> identifier)
@@ -44,7 +48,8 @@ namespace IdeaStatica.BimApiLink.Importers
 		{
 			return type
 				.GetInterfaces()
-				.OrderBy(x => GetInterfaceRank(x));
+				.Concat(new Type[] { type })
+				.OrderByDescending(x => GetInterfaceRank(x));
 		}
 
 		private int GetInterfaceRank(Type type)

@@ -9,12 +9,18 @@ namespace IdeaStatica.BimApiLink.Importers
 		public T1 Create<T1>(Identifier<T1> identifier)
 			where T1 : IIdeaObject
 		{
-			if (typeof(T1) == typeof(T))
+			if (identifier is not Identifier<T> id)
 			{
-				return Create(identifier);
+				throw new ArgumentException();
+			}
+			T obj = Create(id);
+
+			if (obj is not T1 res)
+			{
+				throw new ArgumentException();
 			}
 
-			throw new ArgumentException();
+			return res;
 		}
 
 		public IIdeaObject Create(IIdentifier identifier)
