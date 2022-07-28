@@ -82,10 +82,11 @@ namespace IdeaStatica.BimApiLink
 
 		protected override IApplicationBIM Create(IPluginLogger logger, IBimApiImporter bimApiImporter, string projectPath)
 		{
-			JsonProjectStorage projectStorage = new(projectPath);
-			Project project = new(logger, new JsonPersistence());
+			JsonPersistence jsonPersistence = new();
+			JsonProjectStorage projectStorage = new(jsonPersistence, projectPath);
+			Project project = new(logger, jsonPersistence);
 			ProjectAdapter projectAdapter = new(project, bimApiImporter);
-			FeaModelAdapter feaModelAdapter = new (bimApiImporter, _feaModel);
+			FeaModelAdapter feaModelAdapter = new(bimApiImporter, _feaModel);
 			IBimImporter bimImporter = BimImporter.Create(feaModelAdapter, projectAdapter, logger);
 
 			return new FeaApplication(ApplicationName, projectAdapter, projectStorage, bimImporter, bimApiImporter);

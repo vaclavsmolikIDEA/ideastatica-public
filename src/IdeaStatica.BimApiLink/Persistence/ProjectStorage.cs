@@ -7,12 +7,12 @@ namespace IdeaStatica.BimApiLink.Persistence
 		private const string PersistencyStorage = "bimapi-data.json";
 
 		private readonly string _path;
-		private readonly JsonPersistence _jsonPersistence;
+		private readonly IFilePersistence _filePersistence;
 
-		public JsonProjectStorage(string workingDirectory)
+		public JsonProjectStorage(IFilePersistence filePersistence, string workingDirectory)
 		{
+			_filePersistence = filePersistence;
 			_path = Path.Combine(workingDirectory, PersistencyStorage);
-			_jsonPersistence = new JsonPersistence();
 		}
 
 		public void Save()
@@ -20,7 +20,7 @@ namespace IdeaStatica.BimApiLink.Persistence
 			using FileStream fs = File.OpenWrite(_path);
 			using StreamWriter streamWriter = new(fs);
 
-			_jsonPersistence.Save(streamWriter);
+			_filePersistence.Save(streamWriter);
 		}
 
 		public void Load()
@@ -30,7 +30,7 @@ namespace IdeaStatica.BimApiLink.Persistence
 				using FileStream fs = File.OpenRead(_path);
 				using StreamReader streamReader = new(fs);
 
-				_jsonPersistence.Load(streamReader);
+				_filePersistence.Load(streamReader);
 			}
 		}
 	}
