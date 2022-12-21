@@ -62,20 +62,11 @@
 
 	public class SteelSetup
 	{
-		public double reductionFactorTension { get; set; }
-		public double reductionFactorShear { get; set; }
-		public double boltTensileShear_Omega { get; set; }
-		public double boltTensileShearCombined_Omega { get; set; }
-		public double boltBearing_Omega { get; set; }
-		public double filletWelds_Omega { get; set; }
-		public double boltTensileShear_Phi { get; set; }
-		public double boltTensileShearCombined_Phi { get; set; }
-		public double boltBearing_Phi { get; set; }
-		public double filletWelds_Phi { get; set; }
-		public double materialFy_Omega { get; set; }
-		public double materialFy_Phi { get; set; }
-		public double boltSlipRes_Phi { get; set; }
-		public double boltSlipRes_Omega { get; set; }
+		public double gammaM0 { get; set; }
+		public double gammaM1 { get; set; }
+		public double gammaM2 { get; set; }
+		public double gammaMfi { get; set; }
+		public double gammaMu { get; set; }
 	}
 
 

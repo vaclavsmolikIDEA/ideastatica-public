@@ -63,8 +63,8 @@ namespace ConnectionParametrizationExample.ViewModels
 			worker.ProgressChanged += ProgressChanged;
 			worker.RunWorkerCompleted += RunWorkerCompleted;
 
-			IdeaAppLocation = @"C:\Users\RadimMach\Desktop\repo\IdeaStatiCa\bin\Debug";
-			IdeaConFilesLocation = @"C:\Users\RadimMach\Downloads\aaa";
+			IdeaAppLocation = @"C:\Program Files\IDEA StatiCa\StatiCa 22.1";
+			IdeaConFilesLocation = @"C:\Users\User\Downloads\models";
 		}
 
 		private void ProgressChanged(object sender, ProgressChangedEventArgs e)

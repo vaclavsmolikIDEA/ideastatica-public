@@ -75,10 +75,14 @@ namespace ConnectionParametrizationExample.Models
 
 									// Add result to builder
 									string connectionName = $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{con.Name}";
-									resultBuilder.AddResult(connectionName, calculationTime, resultSummary, combination.Value.ToList());
+									resultBuilder.AddResult(connectionName, calculationTime, resultSummary, combination.Value.ToList(), combination.Index);
 								}
 								// Save Project
-								string newProjectPath = Path.Combine(IdeaConFilesLocation, $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{combination.Index}.ideaCon");
+								if(!Directory.Exists(Path.Combine(IdeaConFilesLocation, "CalculatedModels")))
+								{
+									Directory.CreateDirectory(Path.Combine(IdeaConFilesLocation, "CalculatedModels"));
+								}
+								string newProjectPath = Path.Combine(IdeaConFilesLocation, "CalculatedModels", $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{combination.Index}.ideaCon");
 								client.SaveAsProject(newProjectPath);
 							}
 						}

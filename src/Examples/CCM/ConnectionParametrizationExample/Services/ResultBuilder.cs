@@ -10,45 +10,63 @@ namespace ConnectionParametrizationExample.Services
 	/// </summary>
 	public class ResultBuilder
 	{
-		Dictionary<string, List<string>> results = new Dictionary<string, List<string>>();
+		List<string> results;
+		List<string> resultsSummaryItems = new List<string> { "Analysis", "Plates", "Loc. deformation", "Bolts", "Anchors", "Preloaded bolts", "Welds", "Concrete block", "Shear", "Buckling" };
 		string resultSeperator;
 
 		public ResultBuilder(string resultSeperator = ";")
 		{
-			results = new Dictionary<string, List<string>>();
+			results = new List<string>();
 			this.resultSeperator = resultSeperator;
 		}
 
-		public void AddResult(string key, double calculationTime, List<CheckResSummary> resultSummary, List<KeyValuePair<string, object>> combination)
+		public void AddResult(string connectionName, double calculationTime, List<CheckResSummary> resultSummary, List<KeyValuePair<string, object>> combination, int combinationIndex)
 		{
-			if (!results.ContainsKey(key))
+			if (!results.Any())
 			{
 				// Create new list for a key
-				results[key] = new List<string>();
+				results = new List<string>();
 
 				// Add headers
 				List<string> headers = new List<string>();
+				headers.Add("Connection name");
+				headers.Add("Combination index");
 				headers.Add("Time [s]");
-				headers.AddRange(resultSummary.Select(x => x.Name));
+				headers.AddRange(resultsSummaryItems);
 				headers.AddRange(combination.Select(y => y.Key));
-				results[key].Add(string.Join(resultSeperator, headers));
+				results.Add(string.Join(resultSeperator, headers));
 			}
 
 			// Add values
 			List<string> resultValues = new List<string>();
+			resultValues.Add(connectionName);
+			resultValues.Add(combinationIndex.ToString());
 			resultValues.Add(calculationTime.ToString());
-			resultValues.AddRange(resultSummary.Select(x => x.CheckValue.ToString()));
+			AddResultValues(resultValues, resultSummary);
 			resultValues.AddRange(combination.Select(y => y.Value.ToString()));
-			results[key].Add(string.Join(resultSeperator, resultValues));
+			results.Add(string.Join(resultSeperator, resultValues));
+		}
+
+		private void AddResultValues(List<string> resultValues, List<CheckResSummary> resultSummary)
+		{
+			foreach(string key in resultsSummaryItems)
+			{
+				var result = resultSummary.FirstOrDefault(y => y.Name == key);
+				if (result != null)
+				{
+					resultValues.Add(result.CheckValue.ToString());
+				}
+				else
+				{
+					resultValues.Add(string.Empty);
+				}
+			}
 		}
 
 		public void WriteAllResultsToCsv(string path)
 		{
-			foreach(KeyValuePair<string, List<string>> result in results)
-			{
-				string resultFilePath = Path.Combine(path, $"{result.Key}.csv");
-				File.WriteAllLines(resultFilePath, result.Value);
-			}
+			string resultFilePath = Path.Combine(path, "Results.csv");
+			File.WriteAllLines(resultFilePath, results);
 		}
 	}
 }
