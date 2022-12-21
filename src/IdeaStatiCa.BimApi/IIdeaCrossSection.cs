@@ -9,5 +9,10 @@ namespace IdeaStatiCa.BimApi
 		/// Rotation of the cross-section.
 		/// </summary>
 		double Rotation { get; }
+
+		/// <summary>
+		/// Specifies that the cross-section is in its principal axis.
+		/// </summary>
+		bool IsInPrincipal { get; }
 	}
 }

@@ -27,5 +27,11 @@ namespace IdeaRS.OpenModel.CrossSection
 		/// Rotation of Cross - Section
 		/// </summary>
 		public double CrossSectionRotation { get; set; }
+
+
+		/// <summary>
+		/// Specifies that the cross-section is in its principal axis.
+		/// </summary>
+		public bool IsInPrincipal { get; set; }
 	}
 }
