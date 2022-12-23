@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using ConnectionParametrizationExample.Extensions;
 using System.ComponentModel;
 using ConnectionParametrizationExample.Services;
+using IdeaRS.OpenModel.Connection;
 
 namespace ConnectionParametrizationExample.Models
 {
@@ -42,7 +43,7 @@ namespace ConnectionParametrizationExample.Models
 					// Report progress
 					double indexOf = IdeaConFiles.FindIndex(x => x == ideaConFile);
 					worker.ReportProgress((int)(indexOf / IdeaConFiles.Count * 100));
-			
+
 					// Open project on the service side
 					client.OpenProject(ideaConFile);
 
@@ -61,6 +62,8 @@ namespace ConnectionParametrizationExample.Models
 								{
 									UpdateCodeSetup(combination.Value);
 
+									double calculationTime = 0;
+									//CalculateUptoMaximumUtilization(client, con, calculationTime);
 									var watch = Stopwatch.StartNew();
 
 									// Calculate a get results
@@ -68,7 +71,7 @@ namespace ConnectionParametrizationExample.Models
 
 									// Calculation time in seconds
 									watch.Stop();
-									double calculationTime = watch.ElapsedMilliseconds / 1000.0;
+									calculationTime = watch.ElapsedMilliseconds / 1000.0;
 
 									// Get result summary
 									var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
@@ -78,11 +81,12 @@ namespace ConnectionParametrizationExample.Models
 									resultBuilder.AddResult(connectionName, calculationTime, resultSummary, combination.Value.ToList(), combination.Index);
 								}
 								// Save Project
-								if(!Directory.Exists(Path.Combine(IdeaConFilesLocation, "CalculatedModels")))
+								string calculatedModels = "CalculatedModels";
+								if (!Directory.Exists(Path.Combine(IdeaConFilesLocation, calculatedModels)))
 								{
-									Directory.CreateDirectory(Path.Combine(IdeaConFilesLocation, "CalculatedModels"));
+									Directory.CreateDirectory(Path.Combine(IdeaConFilesLocation, calculatedModels));
 								}
-								string newProjectPath = Path.Combine(IdeaConFilesLocation, "CalculatedModels", $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{combination.Index}.ideaCon");
+								string newProjectPath = Path.Combine(IdeaConFilesLocation, calculatedModels, $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{combination.Index}.ideaCon");
 								client.SaveAsProject(newProjectPath);
 							}
 						}
@@ -129,6 +133,8 @@ namespace ConnectionParametrizationExample.Models
 			// Get code setup
 			string codeSetup = client.GetCodeSetupJSON();
 
+			File.WriteAllText(Path.Combine(IdeaConFilesLocation, "a.json"), codeSetup);
+
 			// Create new code setup object
 			CodeSetup setup = new CodeSetup();
 			JsonConvert.PopulateObject(codeSetup, setup);
@@ -144,6 +150,33 @@ namespace ConnectionParametrizationExample.Models
 
 			// Update code setup
 			client.UpdateCodeSetupJSON(parametrizedSetup);
+
+			File.WriteAllText(Path.Combine(IdeaConFilesLocation, "b.json"), client.GetCodeSetupJSON());
+		}
+
+		private void CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con, double calculationTime)
+		{
+			bool resultWithinTolerance = false;
+			GoalSeeker goalSeeker = new GoalSeeker(1, 0.05);
+
+			while (!resultWithinTolerance)
+			{
+				var watch = Stopwatch.StartNew();
+
+				// Calculate a get results
+				var cbfemResults = client.Calculate(con.Identifier);
+
+				// Calculation time in seconds
+				watch.Stop();
+				calculationTime = watch.ElapsedMilliseconds / 1000.0;
+
+				// Get result summary
+				var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
+
+				var weldSummary = resultSummary.Find(x => x.Name == "Welds").CheckValue;
+
+				Debug.Assert(true);
+			}
 		}
 	}
 }
