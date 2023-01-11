@@ -13,6 +13,8 @@ namespace ConnectionParametrizationExample.Models
 {
 	public class ParametrizedModel
 	{
+		List<string> resultsSummaryItems = new List<string> { "Analysis", "Plates", "Loc. deformation", "Bolts", "Anchors", "Preloaded bolts", "Welds", "Concrete block", "Shear", "Buckling" };
+
 		public string IdeaAppLocation { get; set; }
 		public string IdeaConFilesLocation { get; set; }
 		private ConnectionHiddenCheckClient client;
@@ -62,23 +64,16 @@ namespace ConnectionParametrizationExample.Models
 								{
 									UpdateCodeSetup(combination.Value);
 
-									double calculationTime = 0;
-									//CalculateUptoMaximumUtilization(client, con, calculationTime);
-									var watch = Stopwatch.StartNew();
+									// Calculate model
+									ConnectionResultInfo result = CalculateUptoMaximumUtilization(client, con);
 
-									// Calculate a get results
-									var cbfemResults = client.Calculate(con.Identifier);
-
-									// Calculation time in seconds
-									watch.Stop();
-									calculationTime = watch.ElapsedMilliseconds / 1000.0;
-
-									// Get result summary
-									var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
+									// Add info to result
+									result.CombinationValues = combination.Value.ToList();
+									result.CombinationIndex = combination.Index;
+									result.ConnectionName = $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{con.Name}";
 
 									// Add result to builder
-									string connectionName = $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{con.Name}";
-									resultBuilder.AddResult(connectionName, calculationTime, resultSummary, combination.Value.ToList(), combination.Index);
+									resultBuilder.AddResult(result);
 								}
 								// Save Project
 								string calculatedModels = "CalculatedModels";
@@ -133,8 +128,6 @@ namespace ConnectionParametrizationExample.Models
 			// Get code setup
 			string codeSetup = client.GetCodeSetupJSON();
 
-			File.WriteAllText(Path.Combine(IdeaConFilesLocation, "a.json"), codeSetup);
-
 			// Create new code setup object
 			CodeSetup setup = new CodeSetup();
 			JsonConvert.PopulateObject(codeSetup, setup);
@@ -150,17 +143,49 @@ namespace ConnectionParametrizationExample.Models
 
 			// Update code setup
 			client.UpdateCodeSetupJSON(parametrizedSetup);
-
-			File.WriteAllText(Path.Combine(IdeaConFilesLocation, "b.json"), client.GetCodeSetupJSON());
 		}
 
-		private void CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con, double calculationTime)
+		private void UpdateLoads(string identifier, string loads, double loadCoefficient)
+		{
+			List<LoadEffects> loadEffects = new List<LoadEffects>();
+			JsonConvert.PopulateObject(loads, loadEffects);
+
+			// Update loads
+			foreach (var load in loadEffects)
+			{
+				foreach (var force in load.forcesOnSegments)
+				{
+					force.n *= loadCoefficient;
+					force.mx *= loadCoefficient;
+					force.my *= loadCoefficient;
+					force.mz *= loadCoefficient;
+					force.qy *= loadCoefficient;
+					force.qz *= loadCoefficient;
+				}
+			}
+
+			string updatedLoads = JsonConvert.SerializeObject(loadEffects, Formatting.Indented);
+			client.UpdateLoadingFromJson(identifier, updatedLoads);
+		}
+
+		private ConnectionResultInfo CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con)
 		{
 			bool resultWithinTolerance = false;
-			GoalSeeker goalSeeker = new GoalSeeker(1, 0.05);
+			GoalSeeker goalSeeker = new GoalSeeker(100, 0.5);
+			double loadCoefficient = 1;
+			var count = 0;
+			ConnectionResultInfo result = new ConnectionResultInfo();
 
-			while (!resultWithinTolerance)
+			// Get initial loads
+			var loads = client.GetConnectionLoadingJSON(con.Identifier);
+
+			while (!resultWithinTolerance || count >= 40)
 			{
+				count++;
+
+				UpdateLoads(con.Identifier, loads, loadCoefficient);
+
+				double calculationTime;
 				var watch = Stopwatch.StartNew();
 
 				// Calculate a get results
@@ -173,10 +198,27 @@ namespace ConnectionParametrizationExample.Models
 				// Get result summary
 				var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
 
+				// TODO check UT for selected items
 				var weldSummary = resultSummary.Find(x => x.Name == "Welds").CheckValue;
 
-				Debug.Assert(true);
+				// Check results
+				if (goalSeeker.IsOutputWithinTolerance(weldSummary))
+				{
+					resultWithinTolerance = true;
+					UpdateLoads(con.Identifier, loads, 1);
+					result.Summary = resultSummary;
+					result.CalculationTime = calculationTime;
+					result.LoadCoefficient = loadCoefficient;
+					result.NumberOfIteration = count;
+				}
+				else
+				{
+					goalSeeker.AddData(loadCoefficient, weldSummary);
+					loadCoefficient = goalSeeker.SuggestInput();
+				}
 			}
+
+			return result;
 		}
 	}
 }

@@ -20,7 +20,8 @@ namespace ConnectionParametrizationExample.Services
 			this.resultSeperator = resultSeperator;
 		}
 
-		public void AddResult(string connectionName, double calculationTime, List<CheckResSummary> resultSummary, List<KeyValuePair<string, object>> combination, int combinationIndex)
+		//public void AddResult(string connectionName, double calculationTime, List<CheckResSummary> resultSummary, List<KeyValuePair<string, object>> combination, int combinationIndex)
+		public void AddResult(ConnectionResultInfo resultInfo)
 		{
 			if (!results.Any())
 			{
@@ -32,18 +33,20 @@ namespace ConnectionParametrizationExample.Services
 				headers.Add("Connection name");
 				headers.Add("Combination index");
 				headers.Add("Time [s]");
+				headers.Add("Load coefficient");
 				headers.AddRange(resultsSummaryItems);
-				headers.AddRange(combination.Select(y => y.Key));
+				headers.AddRange(resultInfo.CombinationValues.Select(y => y.Key));
 				results.Add(string.Join(resultSeperator, headers));
 			}
 
 			// Add values
 			List<string> resultValues = new List<string>();
-			resultValues.Add(connectionName);
-			resultValues.Add(combinationIndex.ToString());
-			resultValues.Add(calculationTime.ToString());
-			AddResultValues(resultValues, resultSummary);
-			resultValues.AddRange(combination.Select(y => y.Value.ToString()));
+			resultValues.Add(resultInfo.ConnectionName);
+			resultValues.Add(resultInfo.CombinationIndex.ToString());
+			resultValues.Add(resultInfo.CalculationTime.ToString());
+			resultValues.Add(resultInfo.LoadCoefficient.ToString());
+			AddResultValues(resultValues, resultInfo.Summary);
+			resultValues.AddRange(resultInfo.CombinationValues.Select(y => y.Value.ToString()));
 			results.Add(string.Join(resultSeperator, resultValues));
 		}
 
