@@ -75,7 +75,7 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-			<StackPanel Margin="0 0 0 15">
+			<StackPanel Margin="0 0 0 15" Visibility="Collapsed">
 				<CheckBox>Increase load to any Ut=100%</CheckBox>
 				<CheckBox>Increase load to Limit plastic strain of plates to 5%</CheckBox>
 				<CheckBox>Increase load to Bolts Ut=100%</CheckBox>

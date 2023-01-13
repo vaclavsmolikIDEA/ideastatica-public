@@ -8,6 +8,7 @@ using ConnectionParametrizationExample.Extensions;
 using System.ComponentModel;
 using ConnectionParametrizationExample.Services;
 using IdeaRS.OpenModel.Connection;
+using Newtonsoft.Json.Linq;
 
 namespace ConnectionParametrizationExample.Models
 {
@@ -128,21 +129,32 @@ namespace ConnectionParametrizationExample.Models
 			// Get code setup
 			string codeSetup = client.GetCodeSetupJSON();
 
-			// Create new code setup object
-			CodeSetup setup = new CodeSetup();
-			JsonConvert.PopulateObject(codeSetup, setup);
+			JObject jObject = JsonConvert.DeserializeObject(codeSetup) as JObject;
 
 			// Set code setup according combination
 			foreach (var parameter in combination)
 			{
-				// Set value to parametrized property
-				var parametrizedProperty = setup.GetType().GetProperty(parameter.Key);
-				parametrizedProperty.SetValue(setup, parameter.Value, null);
+				JToken jToken = jObject.SelectToken(parameter.Key);
+				if (parameter.Value is double doubleVariable)
+				{
+					jToken.Replace(doubleVariable);
+				}
+				else if (parameter.Value is bool boolVariable)
+				{
+					jToken.Replace(boolVariable);
+				}
+				else if (parameter.Value is long longVariable)
+				{
+					jToken.Replace(longVariable);
+				}
+				else
+				{
+					Debug.Assert(false, "unknown type");
+				}
 			}
-			string parametrizedSetup = JsonConvert.SerializeObject(setup, Formatting.Indented);
 
 			// Update code setup
-			client.UpdateCodeSetupJSON(parametrizedSetup);
+			client.UpdateCodeSetupJSON(jObject.ToString());
 		}
 
 		private void UpdateLoads(string identifier, string loads, double loadCoefficient)
@@ -179,8 +191,9 @@ namespace ConnectionParametrizationExample.Models
 			// Get initial loads
 			var loads = client.GetConnectionLoadingJSON(con.Identifier);
 
-			while (!resultWithinTolerance || count >= 40)
-			{
+			// TODO
+			//while (!resultWithinTolerance || count >= 40)
+			//{
 				count++;
 
 				UpdateLoads(con.Identifier, loads, loadCoefficient);
@@ -199,24 +212,24 @@ namespace ConnectionParametrizationExample.Models
 				var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
 
 				// TODO check UT for selected items
-				var weldSummary = resultSummary.Find(x => x.Name == "Welds").CheckValue;
+				//var weldSummary = resultSummary.Find(x => x.Name == "Welds").CheckValue;
 
 				// Check results
-				if (goalSeeker.IsOutputWithinTolerance(weldSummary))
-				{
+				//if (goalSeeker.IsOutputWithinTolerance(weldSummary))
+				//{
 					resultWithinTolerance = true;
 					UpdateLoads(con.Identifier, loads, 1);
 					result.Summary = resultSummary;
 					result.CalculationTime = calculationTime;
 					result.LoadCoefficient = loadCoefficient;
 					result.NumberOfIteration = count;
-				}
-				else
-				{
-					goalSeeker.AddData(loadCoefficient, weldSummary);
-					loadCoefficient = goalSeeker.SuggestInput();
-				}
-			}
+				//}
+				//else
+				//{
+				//	goalSeeker.AddData(loadCoefficient, weldSummary);
+				//	loadCoefficient = goalSeeker.SuggestInput();
+				//}
+			//}
 
 			return result;
 		}
