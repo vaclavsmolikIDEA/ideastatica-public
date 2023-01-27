@@ -61,9 +61,13 @@ namespace ConnectionParametrizationExample.Models
 							// Iterate over all combinations
 							foreach (var combination in parameterCombinations.Select((x, i) => new { Value = x, Index = i }))
 							{
+								// Save initial loads
+								var initialLoads = GetAllLoadsFromProject( projInfo);
+
 								// Iterate all connections in the project
 								foreach (var con in projInfo.Connections)
 								{
+									// Get initial loads and update code setup
 									UpdateCodeSetup(combination.Value);
 
 									// Calculate model
@@ -85,6 +89,9 @@ namespace ConnectionParametrizationExample.Models
 								}
 								string newProjectPath = Path.Combine(IdeaConFilesLocation, calculatedModels, $"{Path.GetFileNameWithoutExtension(ideaConFile)}_{combination.Index}.ideaCon");
 								client.SaveAsProject(newProjectPath);
+
+								// Reset load to initial values
+								ResetLoads(projInfo, initialLoads);
 							}
 						}
 					}
@@ -158,6 +165,24 @@ namespace ConnectionParametrizationExample.Models
 			client.UpdateCodeSetupJSON(jObject.ToString());
 		}
 
+		private List<string> GetAllLoadsFromProject(ConProjectInfo projectInfo)
+		{
+			List<string> projectLoads = new List<string>();
+			foreach (string identifier in projectInfo.Connections.Select(con => con.Identifier).ToList())
+			{
+				projectLoads.Add(client.GetConnectionLoadingJSON(identifier));
+			}
+			return projectLoads;
+		}
+
+		private void ResetLoads(ConProjectInfo projectInfo, List<string> loads)
+		{
+			for (int i = 0; i < projectInfo.Connections.Count; i++)
+			{
+				UpdateLoads(projectInfo.Connections[i].Identifier, loads[i], 1);
+			}
+		}
+
 		private void UpdateLoads(string identifier, string loads, double loadCoefficient)
 		{
 			List<LoadEffects> loadEffects = new List<LoadEffects>();
@@ -190,7 +215,6 @@ namespace ConnectionParametrizationExample.Models
 		private ConnectionResultInfo CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con, List<string> stopAtLimitResultItems)
 		{
 			bool resultWithinTolerance = false;
-			//GoalSeeker goalSeeker = new GoalSeeker(100, 0.5);
 			double loadCoefficient = 1;
 			var count = 0;
 			ConnectionResultInfo result = new ConnectionResultInfo();
@@ -220,18 +244,17 @@ namespace ConnectionParametrizationExample.Models
 				}
 			}
 
-
+			// Calculate and stop at limit utilization
 			while (!resultWithinTolerance && count <= 40)
 			{
 				count++;
 
-				// Update  loads according load coefficient
+				// Update loads according load coefficient
 				UpdateLoads(con.Identifier, loads, loadCoefficient);
 
+				// Calculate a get results
 				double calculationTime;
 				var watch = Stopwatch.StartNew();
-
-				// Calculate a get results
 				var cbfemResults = client.Calculate(con.Identifier);
 
 				// Calculation time in seconds
@@ -256,7 +279,6 @@ namespace ConnectionParametrizationExample.Models
 						if (goalSeeker.IsOutputWithinTolerance(itemSummary))
 						{
 							resultWithinTolerance = true;
-							UpdateLoads(con.Identifier, loads, 1);
 							result.Summary = resultSummary;
 							result.CalculationTime = calculationTime;
 							result.LoadCoefficient = loadCoefficient;
