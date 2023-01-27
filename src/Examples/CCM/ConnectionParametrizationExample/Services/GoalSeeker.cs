@@ -66,7 +66,7 @@ namespace ConnectionParametrizationExample.Services
 				suggestedInput = coefficient * inputData[0];
 			}
 			// All output is to high
-			else if(targetOutput < inputData[0])
+			else if(targetOutput < outputData[0])
 			{
 				// Output is not changing, cannot
 				if (outputData[0] == outputData[1])
@@ -90,7 +90,7 @@ namespace ConnectionParametrizationExample.Services
 				}
 			}
 			// All output is to low
-			else if (targetOutput > inputData.Last())
+			else if (targetOutput > outputData.Last())
 			{
 				// Output is not changing, cannot
 				if (outputData.Last() == outputData[outputData.Count - 2])

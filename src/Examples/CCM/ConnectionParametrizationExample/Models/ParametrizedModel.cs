@@ -196,7 +196,7 @@ namespace ConnectionParametrizationExample.Models
 			//{
 				count++;
 
-				UpdateLoads(con.Identifier, loads, loadCoefficient);
+				//UpdateLoads(con.Identifier, loads, loadCoefficient);
 
 				double calculationTime;
 				var watch = Stopwatch.StartNew();
@@ -218,7 +218,7 @@ namespace ConnectionParametrizationExample.Models
 				//if (goalSeeker.IsOutputWithinTolerance(weldSummary))
 				//{
 					resultWithinTolerance = true;
-					UpdateLoads(con.Identifier, loads, 1);
+					//UpdateLoads(con.Identifier, loads, 1);
 					result.Summary = resultSummary;
 					result.CalculationTime = calculationTime;
 					result.LoadCoefficient = loadCoefficient;
