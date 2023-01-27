@@ -14,13 +14,14 @@ namespace ConnectionParametrizationExample.Models
 {
 	public class ParametrizedModel
 	{
-		List<string> resultsSummaryItems = new List<string> { "Analysis", "Plates", "Loc. deformation", "Bolts", "Anchors", "Preloaded bolts", "Welds", "Concrete block", "Shear", "Buckling" };
+		List<string> resultsSummaryItems = new List<string> { "Plates", "Loc. deformation", "Bolts", "Anchors", "Preloaded bolts", "Welds", "Concrete block", "Shear" };
+		//List<string> resultsSummaryItems = new List<string> { "Analysis", "Plates", "Loc. deformation", "Bolts", "Anchors", "Preloaded bolts", "Welds", "Concrete block", "Shear", "Buckling" };
 
 		public string IdeaAppLocation { get; set; }
 		public string IdeaConFilesLocation { get; set; }
 		private ConnectionHiddenCheckClient client;
 
-		public void RunParametrizedAnalysis(List<string> IdeaConFiles, BackgroundWorker worker)
+		public void RunParametrizedAnalysis(List<string> IdeaConFiles, List<string> stopAtLimitResultItems, BackgroundWorker worker)
 		{
 			// Create result writer
 			ResultBuilder resultBuilder = new ResultBuilder();
@@ -66,7 +67,7 @@ namespace ConnectionParametrizationExample.Models
 									UpdateCodeSetup(combination.Value);
 
 									// Calculate model
-									ConnectionResultInfo result = CalculateUptoMaximumUtilization(client, con);
+									ConnectionResultInfo result = CalculateUptoMaximumUtilization(client, con, stopAtLimitResultItems);
 
 									// Add info to result
 									result.CombinationValues = combination.Value.ToList();
@@ -162,6 +163,12 @@ namespace ConnectionParametrizationExample.Models
 			List<LoadEffects> loadEffects = new List<LoadEffects>();
 			JsonConvert.PopulateObject(loads, loadEffects);
 
+			// For now only first load effect is considered
+			if (loadEffects.Count > 1)
+			{
+				loadEffects.RemoveRange(1, loadEffects.Count - 1);
+			}
+
 			// Update loads
 			foreach (var load in loadEffects)
 			{
@@ -180,10 +187,10 @@ namespace ConnectionParametrizationExample.Models
 			client.UpdateLoadingFromJson(identifier, updatedLoads);
 		}
 
-		private ConnectionResultInfo CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con)
+		private ConnectionResultInfo CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con, List<string> stopAtLimitResultItems)
 		{
 			bool resultWithinTolerance = false;
-			GoalSeeker goalSeeker = new GoalSeeker(100, 0.5);
+			//GoalSeeker goalSeeker = new GoalSeeker(100, 0.5);
 			double loadCoefficient = 1;
 			var count = 0;
 			ConnectionResultInfo result = new ConnectionResultInfo();
@@ -191,12 +198,35 @@ namespace ConnectionParametrizationExample.Models
 			// Get initial loads
 			var loads = client.GetConnectionLoadingJSON(con.Identifier);
 
-			// TODO
-			//while (!resultWithinTolerance || count >= 40)
-			//{
+			// Get result to stop at limit
+			List<string> resultItems = stopAtLimitResultItems;
+
+			if (stopAtLimitResultItems.Contains("All"))
+			{
+				resultItems = resultsSummaryItems;
+			}
+
+			// Generate GoalSeeker for selected result items
+			List<GoalSeeker> goalSeekerItems = new List<GoalSeeker>();
+			foreach(string item in resultItems)
+			{
+				if (item == "Plates")
+				{
+					goalSeekerItems.Add(new GoalSeeker(5, 0.1));
+				}
+				else
+				{
+					goalSeekerItems.Add(new GoalSeeker(100, 0.5));
+				}
+			}
+
+
+			while (!resultWithinTolerance && count <= 40)
+			{
 				count++;
 
-				//UpdateLoads(con.Identifier, loads, loadCoefficient);
+				// Update  loads according load coefficient
+				UpdateLoads(con.Identifier, loads, loadCoefficient);
 
 				double calculationTime;
 				var watch = Stopwatch.StartNew();
@@ -211,25 +241,42 @@ namespace ConnectionParametrizationExample.Models
 				// Get result summary
 				var resultSummary = cbfemResults.ConnectionCheckRes.LastOrDefault().CheckResSummary;
 
-				// TODO check UT for selected items
-				//var weldSummary = resultSummary.Find(x => x.Name == "Welds").CheckValue;
+				List<double> loadCoefficients = new List<double>();
 
-				// Check results
-				//if (goalSeeker.IsOutputWithinTolerance(weldSummary))
-				//{
-					resultWithinTolerance = true;
-					//UpdateLoads(con.Identifier, loads, 1);
-					result.Summary = resultSummary;
-					result.CalculationTime = calculationTime;
-					result.LoadCoefficient = loadCoefficient;
-					result.NumberOfIteration = count;
-				//}
-				//else
-				//{
-				//	goalSeeker.AddData(loadCoefficient, weldSummary);
-				//	loadCoefficient = goalSeeker.SuggestInput();
-				//}
-			//}
+				for (int i = 0; i < resultItems.Count; i++)
+				{
+					string item = resultItems[i];
+					var goalSeeker = goalSeekerItems[i];
+
+					if (resultSummary.Find(x => x.Name == item) != null)
+					{
+						var itemSummary = resultSummary.Find(x => x.Name == item).CheckValue;
+
+						// Check results
+						if (goalSeeker.IsOutputWithinTolerance(itemSummary))
+						{
+							resultWithinTolerance = true;
+							UpdateLoads(con.Identifier, loads, 1);
+							result.Summary = resultSummary;
+							result.CalculationTime = calculationTime;
+							result.LoadCoefficient = loadCoefficient;
+							result.NumberOfIteration = count;
+							break;
+						}
+						else
+						{
+							goalSeeker.AddData(loadCoefficient, itemSummary);
+							loadCoefficients.Add(goalSeeker.SuggestInput());
+						}
+					}
+				}
+
+				if (!resultWithinTolerance)
+				{
+					loadCoefficient = loadCoefficients.Min();
+				}
+
+			}
 
 			return result;
 		}

@@ -36,6 +36,7 @@
 
         <conv:FilePathConverter x:Key="FilePathConverter" />
         <conv:VisibilityConverter x:Key="VisibilityConverter" />
+		<conv:CheckBoxToListConverter x:Key="CheckBoxToListConverter" />
     </Window.Resources>
 
     <Grid Margin="10">
@@ -75,13 +76,31 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-			<StackPanel Margin="0 0 0 15" Visibility="Collapsed">
-				<CheckBox>Increase load to any Ut=100%</CheckBox>
-				<CheckBox>Increase load to Limit plastic strain of plates to 5%</CheckBox>
-				<CheckBox>Increase load to Bolts Ut=100%</CheckBox>
-				<CheckBox>Increase load to Welds Ut=100%</CheckBox>
-				<CheckBox>Increase load to Anchors Ut=100%</CheckBox>
-				<CheckBox>Increase load to Concrete in compression Ut=100%</CheckBox>
+			<StackPanel Margin="0 0 0 15">
+				<CheckBox
+					Content="Increase load to any Ut=100%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='All'}">
+				</CheckBox>
+				<CheckBox
+					Content="Increase load to Limit plastic strain of plates to 5%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='Plates'}">
+					</CheckBox>
+				<CheckBox
+					Content="Increase load to Bolts Ut=100%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='Bolts'}">
+				</CheckBox>
+				<CheckBox
+					Content="Increase load to Welds Ut=100%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='Welds'}">
+				</CheckBox>
+				<CheckBox
+					Content="Increase load to Anchors Ut=100%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='Anchors'}">
+				</CheckBox>
+				<CheckBox
+					Content="Increase load to Concrete in compression Ut=100%"
+					IsChecked="{Binding ResultChecks, Converter={StaticResource CheckBoxToListConverter}, ConverterParameter='Concrete block'}">
+				</CheckBox>
 			</StackPanel>
 
 			<TextBlock Grid.Row="1" Text="IdeaCon files" />

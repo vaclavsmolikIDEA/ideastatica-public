@@ -13,10 +13,11 @@ namespace ConnectionParametrizationExample.ViewModels
 	{
 		public ParametrizedModel model;
 		public List<string> IdeaConFiles { get; set; } = new List<string>();
+		public List<string> ResultChecks { get; set; } = new List<string>();
 
 		public string ideaAppLocation = String.Empty;
-		public string IdeaAppLocation 
-		{ 
+		public string IdeaAppLocation
+		{
 			get => ideaAppLocation;
 			set
 			{
@@ -66,7 +67,7 @@ namespace ConnectionParametrizationExample.ViewModels
 			IdeaAppLocation = @"C:\Users\RadimMach\Desktop\repo\IdeaStatiCa\bin\Debug";
 			IdeaAppLocation = @"C:\Program Files\IDEA StatiCa\StatiCa 23.0";
 			IdeaConFilesLocation = @"C:\Users\User\Downloads\models";
-			//IdeaConFilesLocation = @"C:\Users\RadimMach\Downloads\models";
+			IdeaConFilesLocation = @"C:\Users\RadimMach\Downloads\models";
 		}
 
 		private void ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -81,7 +82,7 @@ namespace ConnectionParametrizationExample.ViewModels
 			CurrentProgress = 0;
 			IsInProgress = true;
 			BackgroundWorker worker = sender as BackgroundWorker;
-			model.RunParametrizedAnalysis(IdeaConFiles, worker);
+			model.RunParametrizedAnalysis(IdeaConFiles, ResultChecks, worker);
 		}
 		void RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
