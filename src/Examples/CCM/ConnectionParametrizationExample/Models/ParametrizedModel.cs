@@ -62,7 +62,7 @@ namespace ConnectionParametrizationExample.Models
 							foreach (var combination in parameterCombinations.Select((x, i) => new { Value = x, Index = i }))
 							{
 								// Save initial loads
-								var initialLoads = GetAllLoadsFromProject( projInfo);
+								var initialLoads = GetAllLoadsFromProject(projInfo);
 
 								// Iterate all connections in the project
 								foreach (var con in projInfo.Connections)
@@ -214,7 +214,7 @@ namespace ConnectionParametrizationExample.Models
 
 		private ConnectionResultInfo CalculateUptoMaximumUtilization(ConnectionHiddenCheckClient client, ConnectionInfo con, List<string> stopAtLimitResultItems)
 		{
-			bool resultWithinTolerance = false;
+			bool getResults = false;
 			double loadCoefficient = 1;
 			var count = 0;
 			ConnectionResultInfo result = new ConnectionResultInfo();
@@ -223,16 +223,16 @@ namespace ConnectionParametrizationExample.Models
 			var loads = client.GetConnectionLoadingJSON(con.Identifier);
 
 			// Get result to stop at limit
-			List<string> resultItems = stopAtLimitResultItems;
+			List<string> resultItemsLimits = stopAtLimitResultItems;
 
 			if (stopAtLimitResultItems.Contains("All"))
 			{
-				resultItems = resultsSummaryItems;
+				resultItemsLimits = resultsSummaryItems;
 			}
 
 			// Generate GoalSeeker for selected result items
 			List<GoalSeeker> goalSeekerItems = new List<GoalSeeker>();
-			foreach(string item in resultItems)
+			foreach (string item in resultItemsLimits)
 			{
 				if (item == "Plates")
 				{
@@ -245,7 +245,7 @@ namespace ConnectionParametrizationExample.Models
 			}
 
 			// Calculate and stop at limit utilization
-			while (!resultWithinTolerance && count <= 40)
+			while (!getResults && count <= 100)
 			{
 				count++;
 
@@ -266,36 +266,48 @@ namespace ConnectionParametrizationExample.Models
 
 				List<double> loadCoefficients = new List<double>();
 
-				for (int i = 0; i < resultItems.Count; i++)
+				// If any result limits, check its utilization
+				if (resultItemsLimits.Any())
 				{
-					string item = resultItems[i];
-					var goalSeeker = goalSeekerItems[i];
-
-					if (resultSummary.Find(x => x.Name == item) != null)
+					for (int i = 0; i < resultItemsLimits.Count; i++)
 					{
-						var itemSummary = resultSummary.Find(x => x.Name == item).CheckValue;
+						string item = resultItemsLimits[i];
+						var goalSeeker = goalSeekerItems[i];
 
-						// Check results
-						if (goalSeeker.IsOutputWithinTolerance(itemSummary))
+						if (resultSummary.Find(x => x.Name == item) != null)
 						{
-							resultWithinTolerance = true;
-							result.Summary = resultSummary;
-							result.CalculationTime = calculationTime;
-							result.LoadCoefficient = loadCoefficient;
-							result.NumberOfIteration = count;
-							break;
-						}
-						else
-						{
-							goalSeeker.AddData(loadCoefficient, itemSummary);
-							loadCoefficients.Add(goalSeeker.SuggestInput());
+							var itemSummary = resultSummary.Find(x => x.Name == item).CheckValue;
+
+							// If result utilization within tolerance get result, else find new load coefficient
+							if (goalSeeker.IsOutputWithinTolerance(itemSummary))
+							{
+								getResults = true;
+								break;
+							}
+							else
+							{
+								goalSeeker.AddData(loadCoefficient, itemSummary);
+								loadCoefficients.Add(goalSeeker.SuggestInput());
+							}
 						}
 					}
 				}
+				// If no limits presented get results
+				else
+				{
+					getResults = true;
+				}
 
-				if (!resultWithinTolerance)
+				if (!getResults)
 				{
 					loadCoefficient = loadCoefficients.Min();
+				}
+				else
+				{
+					result.Summary = resultSummary;
+					result.CalculationTime = calculationTime;
+					result.LoadCoefficient = loadCoefficient;
+					result.NumberOfIteration = count;
 				}
 
 			}
