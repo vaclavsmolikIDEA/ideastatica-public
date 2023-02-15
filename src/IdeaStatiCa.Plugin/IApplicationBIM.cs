@@ -24,6 +24,7 @@ namespace IdeaStatiCa.Plugin
 
 		[OperationContract]
 		string GetActiveSelectionModelXML(IdeaRS.OpenModel.CountryCode countryCode, RequestedItemsType requestedType);
+		Task<string> GetActiveSelectionModelXMLAsync(IdeaRS.OpenModel.CountryCode countryCode, RequestedItemsType requestedType);
 
 		[OperationContract]
 		string GetApplicationName();
@@ -39,10 +40,13 @@ namespace IdeaStatiCa.Plugin
 		[OperationContract]
 		string GetModelForSelectionXML(IdeaRS.OpenModel.CountryCode countryCode, List<BIMItemsGroup> items);
 
+		Task<string> GetModelForSelectionXMLAsync(IdeaRS.OpenModel.CountryCode countryCode, List<BIMItemsGroup> items);
+
 		[OperationContract]
 		bool IsCAD();
 
 		[OperationContract]
 		Task SelectAsync(List<BIMItemId> items);
+		bool IsDataUpToDate();
 	}
 }

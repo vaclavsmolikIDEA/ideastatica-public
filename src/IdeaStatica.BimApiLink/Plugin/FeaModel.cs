@@ -2,19 +2,23 @@
 using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatica.BimApiLink.Importers;
 using IdeaStatiCa.BimApi;
+using Nito.Disposables.Internals;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace IdeaStatica.BimApiLink.Plugin
 {
 	public class FeaUserSelection
 	{
-		public ICollection<Identifier<IIdeaNode>> Nodes { get; init; }
+		public ICollection<Identifier<IIdeaNode>> Nodes { get; set; }
 			= Array.Empty<Identifier<IIdeaNode>>();
 
-		public ICollection<Identifier<IIdeaMember1D>> Members { get; init; }
+		public ICollection<Identifier<IIdeaMember1D>> Members { get; set; }
 			= Array.Empty<Identifier<IIdeaMember1D>>();
 
-		public ICollection<Identifier<IIdeaLoading>> Loads { get; init; }
-			= Array.Empty<Identifier<IIdeaLoading>>();
+		public ICollection<Identifier<IIdeaCombiInput>> Combinations { get; set; }
+			= Array.Empty<Identifier<IIdeaCombiInput>>();
 	}
 
 	public interface IFeaModel
@@ -28,7 +32,7 @@ namespace IdeaStatica.BimApiLink.Plugin
 
 	internal class FeaModelAdapter : IIdeaModel
 	{
-		private FeaUserSelection? _lastSelection;
+		private FeaUserSelection _lastSelection;
 
 		private readonly IBimApiImporter _bimApiImporter;
 		private readonly IFeaModel _feaModel;
@@ -43,11 +47,12 @@ namespace IdeaStatica.BimApiLink.Plugin
 		{
 			if (_lastSelection is null)
 			{
-				throw new InvalidOperationException();
+				return new HashSet<IIdeaLoading>();
 			}
 
-			return _lastSelection.Loads
+			return _lastSelection.Combinations
 				.Select(x => _bimApiImporter.Get(x))
+				.Cast<IIdeaLoading>()
 				.ToHashSet();
 		}
 
@@ -55,24 +60,34 @@ namespace IdeaStatica.BimApiLink.Plugin
 		{
 			return _feaModel.GetAllMembers()
 				.Select(x => _bimApiImporter.Get(x))
+				.WhereNotNull()
 				.ToHashSet();
 		}
 
-		public void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members)
+		public OriginSettings GetOriginSettings()
+			=> _feaModel.GetOriginSettings();
+
+		public void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members, out ISet<IIdeaConnectionPoint> connectionPoints)
 		{
 			FeaUserSelection selection = _feaModel.GetUserSelection();
 			_lastSelection = selection;
 
 			nodes = selection.Nodes
 				.Select(x => _bimApiImporter.Get(x))
+				.WhereNotNull()
 				.ToHashSet();
 
 			members = selection.Members
 				.Select(x => _bimApiImporter.Get(x))
+				.WhereNotNull()
 				.ToHashSet();
+
+			connectionPoints = new HashSet<IIdeaConnectionPoint>();
 		}
 
-		public OriginSettings GetOriginSettings()
-			=> _feaModel.GetOriginSettings();
+		public void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members, out IIdeaConnectionPoint connectionPoint)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

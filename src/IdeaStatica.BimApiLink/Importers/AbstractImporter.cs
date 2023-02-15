@@ -1,21 +1,28 @@
 ﻿using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatiCa.BimApi;
+using System;
 
 namespace IdeaStatica.BimApiLink.Importers
 {
 	public abstract class AbstractImporter<T> : BimLinkObject, IImporter<T>
 		where T : IIdeaObject
 	{
-		public T1 Create<T1>(Identifier<T1> identifier)
-			where T1 : IIdeaObject
+		public TObj Create<TObj>(Identifier<TObj> identifier)
+			where TObj : IIdeaObject
 		{
-			if (identifier is not Identifier<T> id)
+			if (!(identifier is Identifier<T> id))
 			{
 				throw new ArgumentException();
 			}
+
 			T obj = Create(id);
 
-			if (obj is not T1 res)
+			if (obj == null)
+			{
+				return default;
+			}
+
+			if (!(obj is TObj res))
 			{
 				throw new ArgumentException();
 			}

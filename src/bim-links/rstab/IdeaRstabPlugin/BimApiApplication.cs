@@ -16,7 +16,7 @@ namespace IdeaRstabPlugin
 {
 	public abstract class BimApiApplication : ApplicationBIM
 	{
-		private readonly static IPluginLogger _logger = LoggerProvider.GetLogger("ideastatica.IdeaRstabPlugin.bimapiapplication");
+		private static readonly IPluginLogger _logger = LoggerProvider.GetLogger("ideastatica.IdeaRstabPlugin.bimapiapplication");
 
 		private const string PersistencyStorage = "bimapi-data.json";
 
@@ -55,7 +55,7 @@ namespace IdeaRstabPlugin
 			}
 
 			_project = new Project(logger, _jsonPersistence, objectRestorer);
-			_bimImporter = BimImporter.Create(ideaModel, _project, logger, geometryProvider, new BimImporterConfiguration());
+			_bimImporter = BimImporter.Create(ideaModel, _project, logger, geometryProvider, new BimImporterConfiguration(), null, null);
 
 			ImportFinished += OnImportFinished;
 		}
@@ -99,11 +99,11 @@ namespace IdeaRstabPlugin
 
 				if (requestedType == RequestedItemsType.Connections)
 				{
-					modelBIM = _bimImporter.ImportConnections();
+					modelBIM = _bimImporter.ImportConnections(countryCode);
 				}
 				else
 				{
-					modelBIM = _bimImporter.ImportMembers();
+					modelBIM = _bimImporter.ImportMembers(countryCode);
 				}
 
 #if DEBUG
@@ -132,7 +132,7 @@ namespace IdeaRstabPlugin
 
 			try
 			{
-				return _bimImporter.ImportSelected(items);
+				return _bimImporter.ImportSelected(items, countryCode);
 			}
 			catch (Exception e)
 			{

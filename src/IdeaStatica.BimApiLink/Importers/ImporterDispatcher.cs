@@ -1,17 +1,22 @@
-﻿using IdeaStatica.BimApiLink.Identifiers;
+﻿using IdeaStatica.BimApiLink.Hooks;
+using IdeaStatica.BimApiLink.Identifiers;
 using IdeaStatiCa.BimApi;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace IdeaStatica.BimApiLink.Importers
 {
 	internal class ImporterDispatcher : IBimApiImporter
 	{
-		private readonly Dictionary<Type, int> _interfaceRank = new();
+		private readonly Dictionary<Type, int> _interfaceRank = new Dictionary<Type, int>();
 		private readonly ImporterManager _importerManager;
+		private readonly IImporterHook _importerHookManager;
 
-		public ImporterDispatcher(ImporterManager importerManager)
+		public ImporterDispatcher(ImporterManager importerManager, IImporterHook importerHookManager)
 		{
 			_importerManager = importerManager;
-			
+			_importerHookManager = importerHookManager;
 			_interfaceRank[typeof(IIdeaObject)] = 0;
 			_interfaceRank[typeof(IIdeaPersistentObject)] = 0;
 			_interfaceRank[typeof(IIdeaObjectWithResults)] = 0;
@@ -20,11 +25,25 @@ namespace IdeaStatica.BimApiLink.Importers
 		public T Get<T>(Identifier<T> identifier)
 			where T : IIdeaObject
 		{
-			foreach (Type? type in GetSortedInterfaces(typeof(T)))
+			foreach (Type type in GetSortedInterfaces(typeof(T)))
 			{
-				if (_importerManager.TryResolve(type, out IImporter? importer))
+				if (_importerManager.TryResolve(type, out IImporter importer))
 				{
-					return importer.Create(identifier);
+					T obj;
+
+					_importerHookManager.EnterCreate(identifier);
+					try
+					{
+						obj = importer.Create(identifier);
+						_importerHookManager.ExitCreate(identifier, obj);
+					}
+					catch
+					{
+						_importerHookManager.ExitCreate(identifier, null);
+						throw;
+					}
+
+					return obj;
 				}
 			}
 
@@ -33,11 +52,25 @@ namespace IdeaStatica.BimApiLink.Importers
 
 		public IIdeaObject Get(IIdentifier identifier)
 		{
-			foreach (Type? type in GetSortedInterfaces(identifier.ObjectType))
+			foreach (Type type in GetSortedInterfaces(identifier.ObjectType))
 			{
-				if (_importerManager.TryResolve(type, out IImporter? importer))
+				if (_importerManager.TryResolve(type, out IImporter importer))
 				{
-					return importer.Create(identifier);
+					IIdeaObject obj;
+
+					_importerHookManager.EnterCreate(identifier);
+					try
+					{
+						obj = importer.Create(identifier);
+						_importerHookManager.ExitCreate(identifier, obj);
+					}
+					catch
+					{
+						_importerHookManager.ExitCreate(identifier, null);
+						throw;
+					}
+
+					return obj;
 				}
 			}
 
@@ -67,7 +100,7 @@ namespace IdeaStatica.BimApiLink.Importers
 
 		private int GetInterfaceRankInternal(Type type)
 		{
-			Type[]? interfaces = type.GetInterfaces();
+			Type[] interfaces = type.GetInterfaces();
 
 			if (interfaces.Length == 0)
 			{

@@ -5,15 +5,15 @@ namespace IdeaStatica.BimApiLink.BimApi
 {
 	public class IdeaSpan : AbstractIdeaObject<IIdeaSpan>, IIdeaSpan
 	{
-		public virtual IIdeaCrossSection StartCrossSection { get; set; } = null!;
+		public virtual IIdeaCrossSection StartCrossSection { get; set; } = null;
 		
-		public virtual IIdeaCrossSection EndCrossSection { get; set; } = null!;
+		public virtual IIdeaCrossSection EndCrossSection { get; set; } = null;
 		
 		public virtual double StartPosition { get; set; }
 		
 		public virtual double EndPosition { get; set; }
-		
-		protected IdeaSpan(Identifier<IIdeaSpan> identifer)
+
+		public IdeaSpan(Identifier<IIdeaSpan> identifer)
 			: base(identifer)
 		{ }
 

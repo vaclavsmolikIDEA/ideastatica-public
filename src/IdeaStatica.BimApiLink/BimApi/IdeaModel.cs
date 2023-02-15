@@ -1,5 +1,7 @@
 ﻿using IdeaRS.OpenModel;
 using IdeaStatiCa.BimApi;
+using System;
+using System.Collections.Generic;
 
 namespace IdeaStatica.BimApiLink.BimApi
 {
@@ -18,5 +20,15 @@ namespace IdeaStatica.BimApiLink.BimApi
 		public abstract OriginSettings GetOriginSettings();
 
 		public abstract void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members);
+
+		public void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members, out ISet<IIdeaConnectionPoint> connectionPoints)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void GetSelection(out ISet<IIdeaNode> nodes, out ISet<IIdeaMember1D> members, out IIdeaConnectionPoint connectionPoint)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

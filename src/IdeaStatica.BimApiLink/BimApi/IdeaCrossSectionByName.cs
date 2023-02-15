@@ -7,9 +7,11 @@ namespace IdeaStatica.BimApiLink.BimApi
 	{
 		public virtual double Rotation { get; set; }
 		
-		public virtual IIdeaMaterial Material { get; set; } = null!;
-		
-		protected IdeaCrossSectionByName(Identifier<IIdeaCrossSectionByName> identifer)
+		public virtual IIdeaMaterial Material { get; set; } = null;
+
+		public virtual bool IsInPrincipal { get; set; }
+
+		public IdeaCrossSectionByName(Identifier<IIdeaCrossSectionByName> identifer)
 			: base(identifer)
 		{ }
 

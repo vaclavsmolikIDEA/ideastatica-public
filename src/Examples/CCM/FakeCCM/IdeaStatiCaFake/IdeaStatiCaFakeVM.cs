@@ -2,12 +2,12 @@
 using IdeaRS.OpenModel.Message;
 using IdeaRS.OpenModel.Result;
 using IdeaStatiCa.Plugin;
+using IdeaStatiCa.Plugin.Grpc;
+using IdeaStatiCa.Plugin.Grpc.Reflection;
 using Microsoft.Win32;
-using NS = Newtonsoft.Json;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,8 +15,6 @@ using System.Text;
 using System.Windows.Input;
 using System.Xml;
 using System.Xml.Serialization;
-using IdeaStatiCa.Plugin.Grpc.Reflection;
-using IdeaStatiCa.Plugin.Grpc;
 
 namespace IdeaStatiCaFake
 {
@@ -35,7 +33,7 @@ namespace IdeaStatiCaFake
 		private string modelFeaXml;
 
 		public IdeaStatiCaFakeVM()
-		{  
+		{
 			ModelFeaXml = string.Empty;
 			FEAStatus = AppStatus.Finished;
 			ImportConnectionCmd = new CustomCommand(this.CanImportConnection, this.ImportConnection);
@@ -82,8 +80,7 @@ namespace IdeaStatiCaFake
 					Actions.Add(string.Format("Starting Automation clientid = {0}", clientId));
 
 					var grpcClient = new GrpcClient(new NullLogger());
-					grpcClient.Connect(clientId, grpcPort);
-					var grpcClientTask = grpcClient.StartAsync();
+					var grpcClientTask = grpcClient.StartAsync(clientId, grpcPort);
 
 					AutomationHosting = new AutomationHostingGrpc<IAutomation, IApplicationBIM>(new AutomationService<IApplicationBIM>(), grpcClient);
 					AutomationHosting.BIMStatusChanged += new ISEventHandler(AutomationHosting_FEAStatusChanged);
@@ -101,9 +98,7 @@ namespace IdeaStatiCaFake
 		{
 			grpcClient = new GrpcServiceBasedReflectionClient<IAutomation>(new NullLogger());
 
-			grpcClient.Connect(clientId, grpcPort);
-
-			await grpcClient.StartAsync();
+			await grpcClient.StartAsync(clientId, grpcPort);
 
 			Actions.Add($"GRPC server connected");
 		}
@@ -139,7 +134,7 @@ namespace IdeaStatiCaFake
 		{
 			Actions.Add("ImportConnection - calling GetActiveSelectionModel");
 			var xmlString = FEA.GetActiveSelectionModelXML(IdeaRS.OpenModel.CountryCode.ECEN, RequestedItemsType.Connections);
-			var modelFEA = Tools.ModelFromXml(xmlString);
+			var modelFEA = IdeaStatiCa.Plugin.Tools.ModelFromXml(xmlString);
 			ModelFeaXml = xmlString;
 			Actions.Add(string.Format("ImportConnection - recieved results {0}", modelFEA.Project));
 		}
@@ -153,7 +148,7 @@ namespace IdeaStatiCaFake
 		{
 			Actions.Add("ImportMember - calling GetActiveSelectionModel");
 			var xmlString = FEA.GetActiveSelectionModelXML(IdeaRS.OpenModel.CountryCode.ECEN, RequestedItemsType.Substructure);
-			var modelFEA = Tools.ModelFromXml(xmlString);
+			var modelFEA = IdeaStatiCa.Plugin.Tools.ModelFromXml(xmlString);
 			ModelFeaXml = xmlString;
 			Actions.Add(string.Format("ImportMember - recieved results {0}", modelFEA.Project));
 		}
@@ -181,7 +176,7 @@ namespace IdeaStatiCaFake
 			saveFileDialog.Filter = "XML Files | *.xml";
 			if (saveFileDialog.ShowDialog() == true)
 			{
-				var modelFEA = Tools.ModelFromXml(ModelFeaXml);
+				var modelFEA = IdeaStatiCa.Plugin.Tools.ModelFromXml(ModelFeaXml);
 				File.WriteAllText(saveFileDialog.FileName, ModelFeaXml);
 				//SaveToFiles(modelFEA.Model, modelFEA.Results, modelFEA.Messages, saveFileDialog.FileName);
 				//File.WriteAllText(saveFileDialog.FileName + "M", ModelFeaXml);

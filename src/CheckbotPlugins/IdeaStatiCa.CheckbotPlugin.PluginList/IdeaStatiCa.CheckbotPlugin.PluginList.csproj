@@ -4,11 +4,14 @@
     <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
     <ImplicitUsings>false</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <!--<GenerateDocumentationFile>true</GenerateDocumentationFile>-->
+    <RootNamespace>IdeaStatiCa.PluginSystem.PluginList</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Text.Json" Version="5.0.2" />
+    <PackageReference Include="System.Text.Json" Version="6.0.0" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
   

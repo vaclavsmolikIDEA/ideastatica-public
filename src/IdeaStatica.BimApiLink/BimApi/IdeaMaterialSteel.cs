@@ -5,9 +5,9 @@ namespace IdeaStatica.BimApiLink.BimApi
 {
 	public class IdeaMaterialSteel : AbstractIdeaObject<IIdeaMaterialSteel>, IIdeaMaterialSteel
 	{
-		public virtual IdeaRS.OpenModel.Material.MatSteel Material { get; set; } = null!;
-		
-		protected IdeaMaterialSteel(Identifier<IIdeaMaterialSteel> identifer)
+		public virtual IdeaRS.OpenModel.Material.MatSteel Material { get; set; } = null;
+
+		public IdeaMaterialSteel(Identifier<IIdeaMaterialSteel> identifer)
 			: base(identifer)
 		{ }
 

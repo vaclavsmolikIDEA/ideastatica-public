@@ -1,6 +1,5 @@
 using IdeaRS.OpenModel.Geometry2D;
 using IdeaRS.OpenModel.Parameters;
-using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -550,7 +549,7 @@ namespace IdeaRS.OpenModel.Connection
 		/// Geometry of the plate in svg format. In next version will be mark as OBSOLETE! New use property Geometry
 		/// </summary>
 		[DataMember]
-		[ObsoleteAttribute("This property is obsolete. Use Geometry instead.", false)]
+		//[ObsoleteAttribute("This property is obsolete. Use Geometry instead.", false)]
 		public string Region { get; set; }
 
 		/// <summary>
@@ -647,7 +646,7 @@ namespace IdeaRS.OpenModel.Connection
 		public IdeaRS.OpenModel.Geometry3D.Point3D PlanePoint { get; set; }
 
 		/// <summary>
-		/// Plane normal
+		/// Plane normal. Direction of normal set remove part of beam
 		/// </summary>
 		public IdeaRS.OpenModel.Geometry3D.Vector3D NormalVector { get; set; }
 

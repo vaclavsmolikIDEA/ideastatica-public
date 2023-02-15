@@ -36,7 +36,7 @@ namespace IdeaStatiCa.Plugin.Utilities
 
 					foreach (string subKeyName in key.GetSubKeyNames())
 					{
-						if(version.Equals(subKeyName, StringComparison.InvariantCultureIgnoreCase))
+						if (version.Equals(subKeyName, StringComparison.InvariantCultureIgnoreCase))
 						{
 							installPath = GetInstallPath(hklm, Path.Combine(IdeaStatiCaRegistryKey, subKeyName, "IDEAStatiCa", "Designer"));
 							break;
@@ -45,7 +45,7 @@ namespace IdeaStatiCa.Plugin.Utilities
 				}
 			}
 
-			if(string.IsNullOrEmpty(installPath))
+			if (string.IsNullOrEmpty(installPath))
 			{
 				throw new Exception($"IdeaStatica v ${version} is not installed correctly. ");
 			}

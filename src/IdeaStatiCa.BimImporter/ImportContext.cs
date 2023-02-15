@@ -1,12 +1,15 @@
 ﻿using IdeaRS.OpenModel;
+using IdeaRS.OpenModel.Connection;
 using IdeaRS.OpenModel.Result;
 using IdeaStatiCa.BimApi;
 using IdeaStatiCa.BimImporter.BimItems;
 using IdeaStatiCa.BimImporter.Importers;
+using IdeaStatiCa.BimImporter.Results;
 using IdeaStatiCa.Plugin;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace IdeaStatiCa.BimImporter
 {
@@ -18,12 +21,18 @@ namespace IdeaStatiCa.BimImporter
 
 		public List<BIMItemId> BimItems { get; } = new List<BIMItemId>();
 
-		public BimImporterConfiguration Configuration { get; private set; }
+		public CountryCode CountryCode { get; }
+
+		public BimImporterConfiguration Configuration { get; }
 
 		private readonly Dictionary<IIdeaObject, ReferenceElement> _refElements
 			= new Dictionary<IIdeaObject, ReferenceElement>(new IIdeaObjectComparer());
 
-		private readonly ResultOnMembers _resultOnMembers = new ResultOnMembers();
+		private readonly Dictionary<IIdeaObject, object> _refConnectionItems
+			= new Dictionary<IIdeaObject, object>(new IIdeaObjectComparer());
+
+		private readonly List<IIdeaObjectWithResults> _objectsWithResults
+			= new List<IIdeaObjectWithResults>();
 
 		private readonly IPluginLogger _logger;
 		private readonly IProject _project;
@@ -39,8 +48,19 @@ namespace IdeaStatiCa.BimImporter
 			_logger = logger;
 
 			Configuration = configuration;
+		}
 
-			OpenModelResult.ResultOnMembers.Add(_resultOnMembers);
+		public ImportContext(IImporter<IIdeaObject> importer, IResultImporter resultImporter, IProject project, IPluginLogger logger,
+			BimImporterConfiguration configuration, CountryCode countryCode)
+		{
+			_importer = importer;
+			_resultImporter = resultImporter;
+			_project = project;
+			_logger = logger;
+
+			Configuration = configuration;
+
+			CountryCode = countryCode;
 		}
 
 		public ReferenceElement Import(IIdeaObject obj)
@@ -55,16 +75,16 @@ namespace IdeaStatiCa.BimImporter
 
 			if (_refElements.TryGetValue(obj, out ReferenceElement refElm))
 			{
-				_logger.LogDebug($"Object has been already imported with IOM id '{refElm.Id}'");
+				_logger.LogTrace($"Object has been already imported with IOM id '{refElm.Id}'");
 				return refElm;
 			}
 
 			refElm = CreateAndStoreReferenceElement(obj);
 			Debug.Assert(_refElements[obj] == refElm);
 
-			_logger.LogDebug($"Object '{obj.Id}' imported, IOM id '{refElm.Id}'");
+			_logger.LogTrace($"Object '{obj.Id}' imported, IOM id '{refElm.Id}'");
 
-			ImportResults(obj, refElm);
+			PrepareToImportResults(obj);
 
 			return refElm;
 		}
@@ -81,12 +101,36 @@ namespace IdeaStatiCa.BimImporter
 			});
 		}
 
-		private void ImportResults(IIdeaObject obj, ReferenceElement refElm)
+		public void ImportResults(IBimResultsProvider resultsProvider)
 		{
-			if (obj is IIdeaObjectWithResults objectWithResults)
+			Debug.Assert(OpenModelResult.ResultOnMembers.Count == 0);
+
+			ResultOnMembers resultOnMembers = new ResultOnMembers();
+
+			int count = 0;
+
+			// Call into Import may add objects _objectsWithResults
+			// so we need to make sure to process them.
+			while (_objectsWithResults.Count - count > 0)
 			{
-				_logger.LogDebug($"Importing results for object '{obj.Id}'");
-				_resultOnMembers.Members.AddRange(_resultImporter.Import(this, refElm, objectWithResults));
+				foreach (ResultsData data in resultsProvider.GetResults(_objectsWithResults.Skip(count)))
+				{
+					ReferenceElement refElm = Import(data.Object);
+					IEnumerable<ResultOnMember> results = _resultImporter.Import(this, refElm, data);
+					resultOnMembers.Members.AddRange(results);
+				}
+
+				count = _objectsWithResults.Count;
+			}
+
+			OpenModelResult.ResultOnMembers.Add(resultOnMembers);
+		}
+
+		private void PrepareToImportResults(IIdeaObject obj)
+		{
+			if(obj is IIdeaObjectWithResults objectWithResults)
+			{
+				_objectsWithResults.Add(objectWithResults);
 			}
 		}
 
@@ -100,13 +144,45 @@ namespace IdeaStatiCa.BimImporter
 			int result = OpenModel.AddObject(iomObject);
 			if (result != 0)
 			{
-				throw new InvalidOperationException($"OpenModel.AddObject failed, return code '{result}'.");
+				//skip object which is not in IOM collection
+				if (result == -10)
+				{
+					_logger.LogDebug($"OpenModel.AddObject skiped adding to the collection, return code '{result}'. Due");
+				}
+				else
+				{
+					throw new InvalidOperationException($"OpenModel.AddObject failed, return code '{result}'.");
+				}
 			}
 
 			ReferenceElement refElm = new ReferenceElement(iomObject);
 			_refElements.Add(obj, refElm);
 
+			if (iomObject is ConnectionPoint cp && OpenModel.Connections.Count > 0)
+			{
+				OpenModel.Connections[OpenModel.Connections.Count - 1].ConenctionPointId = cp.Id;
+				if (string.IsNullOrWhiteSpace(cp.Name))
+				{
+					cp.Name = $"C {cp.Id}";
+				}
+			}
+
 			return refElm;
+		}
+
+		public object ImportConnectionItem(IIdeaObject obj, ConnectionData connectionData)
+		{
+			object item = _importer.Import(this, obj, connectionData);
+			if (item == null)
+			{
+				throw new InvalidOperationException($"OpenModel add connection item failed, return code '{item}'.");
+			}
+
+			if (!_refConnectionItems.ContainsKey(obj))
+			{
+				_refConnectionItems.Add(obj, item);
+			}
+			return item;
 		}
 	}
 }
